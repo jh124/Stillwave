@@ -1,0 +1,8 @@
+{
+  "name": "stillwave",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "A gentle musical roguelike. Find your way. Find your sound.",
+  "scripts": {"build": "node scripts/build.mjs", "test": "node --test tests/*.test.mjs"}
+}

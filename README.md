@@ -1,115 +1,86 @@
-# DON'T PLAY THIS GAME
-> A neon-drenched, single-player sci-fi tower defense game. **You were warned.**
+# Stillwave
 
-**[Launch the game](https://jh124.github.io/Don-t-play-This-Game/)** · [GitHub Pages setup](#deploying)
+**[Play Stillwave](https://jh124.github.io/Don-t-play-This-Game/)**
 
-## Version 3 — Arcade Assault
+![Stillwave in Mosslight Gardens](assets/preview.webp)
 
-The default mode is now **Arcade Assault**, a shorter, action-focused single-player tower defense campaign. **Classic Defense** (the original 20-wave campaign) remains selectable on the main menu.
+A gentle musical action roguelike. Wander through six illustrated worlds, collect a palette of sounds, and compose a little record of your own. This replaces the original tower-defense game; its source remains in Git history.
 
-**Arcade Assault adds**
-- 12 faster waves, including Titans on waves 4, 8, and 12.
-- Automatic wave deployment after a countdown (10 seconds to set up initially; 5 seconds between waves). Starting early grants bonus credits.
-- A **player-operated railgun**: press **D**, tap **Take Control**, or use the on-field Aim button; hold and drag to fire. Skillful centered hits do more damage and build a precision streak. Release to cool the gun; sustained fire can overheat it.
-- **Combat contracts** with optional money bonuses. These reward manual railgun hits, kill chains, supply collection, flawless defense, and taking on Titans yourself.
-- Time-limited **supply drops**: tap them for credits, repairs, cooling, or a whole-field attack. The drops can be collected during combat and between waves while they remain active.
-- A **fixed mobile quick-build dock** with all six tower choices, so you can select a tower without scrolling to the armory. The dock disappears outside the game and on wide screens.
-- Independent local best scores for Arcade and Classic.
+## The journey
 
-## Previous Command Deck features
+| Movement | World | Musical palette | Guardian |
+| --- | --- | --- | --- |
+| 1 | Mosslight Gardens | Lofi | The Lantern Keeper |
+| 2 | Afterglow City | Synthwave | The Midnight Rider |
+| 3 | Littlebit Ruins | Chiptune | The Forgotten Cartridge |
+| 4 | Sundrift Coast | Bossa | The Pearl Leviathan |
+| 5 | Cloudrest Monastery | Ambient | The Keeper of Silence |
+| 6 | The First Light | Downtempo | The Sun in Bloom |
 
-Built to be playable with touch or mouse, no server or build process necessary. The entire game is HTML, CSS, and a Canvas 2D combat simulation.
+Each world contains eight passages and a distinct, two-phase guardian. Each passage unfolds through six encounters over at least 75 seconds. Collect the three echo shrines and clear the creatures to open the north gateway. Shrine positions, encounters, scenery details, and musical arrangements vary with the journey seed. Some passages have a gentle movement boost or a bonus healing bloom.
 
-### Campaign
+The 48 passages alone take at least 60 minutes of active simulation, before boss fights and exploration. A first clear is designed for about 70–90 minutes, although actual player pacing has not been established through an hour-long human playtest. The game pauses in the background. Save & return to title lets you take longer breaks.
 
-Classic mode offers **20 authored assault waves**, with a **multi-phase Titan boss every fifth wave**. Arcade Assault is a shorter 12-wave alternative. On victory you can continue into infinitely scaling **endless mode**. Each map has a different path and **three power-pad positions** that reward good tower placement.
+Pick one companion for a run:
 
-- **Neon Crossing:** winding industrial routes.
-- **Redline Canyon:** long sight lines and sharp turns.
-- **Ghost Circuit:** tight reactor corridors.
+- **Moonblade:** 36 damage per hit, 0.62-second base recovery, broad cleave, 120-unit reach, and 1 health restored every third successful swing. Better damage, more exposure.
+- **Willowbow:** 24 damage per hit, 0.48-second base recovery, 620-unit reach, arrows that can hit two enemies. More room to dodge, lower damage.
 
-Difficulty: **Normal**, **Hard**, or **Insane**.
+Attack recovery and travel time create measured base single-target rates 55.8 and 48 damage per second respectively in the 20-second stationary-target regression scenario. Both weapons receive the same run upgrade opportunities. **Gentle** mode reduces enemy movement and incoming damage; **Steady** provides modest resistance. All enemy attacks have a wind-up. Drifting briefly grants invincibility.
 
-### 6 towers, 12 specializations
+Echo shrines heal for 8, dropped hearts heal for 10, completed passages heal for 16, and mending herbs heal for 45. A guardian heals for 40, and entering a new world restores health. Every few passages, choose a temporary upgrade to attack damage, maximum health, movement, or attack speed.
 
-| Tower | Cost | Playstyle | Level-3 tech branch choices |
-|---|---:|---|---|
-| Pulse Cannon | 85¢ | Fast single-target fire | **Target Lock** (ramping focus) / **Ricochet** (bouncing shots) |
-| Rail Driver | 180¢ | Piercing beams, armor control | **Titan Breaker** (boss / armor damage) / **Hyper Rail** (more pierce and range) |
-| Cryo Emitter | 145¢ | Crowd control | **Absolute Zero** (extreme slow) / **Shatter Point** (makes targets vulnerable to allies) |
-| Nova Mortar | 215¢ | Explosions and packed groups | **Napalm Round** (damage over time) / **Cluster Bomb** (extra splash radius) |
-| Arc Tesla | 265¢ | Chaining lightning | **Overcharge** (shield / boss damage) / **Chain Reaction** (more chain targets) |
-| Credit Mine | 155¢ | Economic investment (max 5) | **Compound Yield** (more credits) / **Tactical Relay** (buffs nearby fire rate) |
+## Your musical collection
 
-All towers reach **level 4**. At level 2, the next upgrade asks you to choose **one** of two mutually exclusive specializations.
+There are 36 collection entries, including the starting Lofi palette. Echo bearers appear in passages 2, 4, 6, and 8 of every world. Chordkeepers summon companions, Tempo Wanderers charge, Echo Weavers scatter notes, and Meter Wardens release circular patterns. Defeat them to unlock one of the 24 track/control discoveries. Each guardian unlocks its instrument and genre palette.
 
-Build towers off the road, upgrade them, set target priority (**First, Strong, Last**), and sell them for a 70% credit refund.
+Unlocks include bass, melody, atmosphere, and arpeggio tracks; instruments; six keys; minor, major, Dorian, and pentatonic scales; 4/4, 3/4, 6/8, and 5/4; tempo from 60–96 BPM; swing; reverb; tape delay; warmth; and arrangement density. Notes share a diatonic harmonic progression. Music is composed locally with seeded motifs, changing phrases, synthesized instruments, and genre-specific rhythms. There is no prerecorded music loop and no timing requirement for combat.
 
-### Power pads
+Your collection survives death. A new run starts from the first world with your chosen weapon. Run-only combat upgrades reset. Your current run, musical settings, completed guardians, and collection save automatically in browser localStorage. Save & return to title resumes at the **start of the current passage**, with saved health, herbs, weapon, upgrades, and elapsed run time. This is a device-local save; clearing browser storage removes it.
 
-Three glowing power pads are located off-road on each map. A tower built directly on one gets a passive boost:
+## The completion studio
 
-- **Longshot (cyan):** +22% attack range.
-- **Quickfire (purple):** +18% fire rate.
-- **Warhead (amber):** +22% damage.
+Complete the six guardians and enter the final gateway to open the completion screen. Choose your genre, instruments, active tracks, track levels, key, scale, meter, BPM, effects, and master volume. Request a new arrangement seed for another composition. The studio remains accessible from the title after your first clear.
 
-### Threat roster
+**Create & download** renders a new, exactly 60-second stereo, 44.1 kHz, 16-bit PCM WAV using the same synthesis and composition engine as live music. The arrangement fades in and out and includes its effects. A preview player and reusable download link appear after rendering. Audio is generated on the device; no recording permission, account, or upload is required.
 
-Enemy units include light drones, fast runners, armored brutes, shielders, splitters, phantoms, medics that heal their squad, **jammers** that temporarily disable turrets, and **carriers** that spill reinforcements when destroyed. Titans summon reinforcements, shield allies, and enter an enraged phase below half health.
+## Controls
 
-### Tactical abilities
+| Action | Desktop | Touch |
+| --- | --- | --- |
+| Move | WASD / arrows | Left stick |
+| Aim and attack | Hold left click, aim with mouse | Hold Attack, automatic nearby aim |
+| Attack with assisted aim | Hold Space | Hold Attack |
+| Drift | Shift / right click | Drift |
+| Heal | Q / Mend button | Mend button |
+| Gather echo / use gateway | E / on-screen button | Gather / Continue |
+| Music panel | M / music dock | Music dock |
+| Pause | Escape / pause button | Pause button |
 
-- **Q — Overdrive:** double tower fire rate for 8 seconds.
-- **E — EMP Blast:** freeze currently deployed enemies for 3 seconds.
-- **R — Orbital Strike:** choose a point to deal heavy area damage.
+Assisted aim for Space and reduced motion are configurable in Pause. Music continues while a visible pause or music panel is open, and suspends when the tab is hidden. Browsers require an initial interaction before playing sound. If your OS suspends audio, resume through the visible music controls.
 
-The abilities have independent cooldowns, which can be shortened with research.
+## Development
 
-### Score, bonuses, and long-term challenges
+No runtime packages, build dependencies, or backend are required. Node 22+ is used for the small build script and tests.
 
-- Earn credits from kills, wave completions, and Credit Mines.
-- Maintain quick kill streaks to raise score multipliers.
-- Clear a wave without a single reactor hit to earn a **Perfect Defense** payout.
-- Earn research choices after waves 3, 6, and 9 in Arcade Assault, or after waves 5, 10, and 15 in Classic. Beating either campaign unlocks endless waves.
-- Your mission debrief includes a performance grade, kills, score, perfect waves, and longest kill chain.
-- **Eight persistent accolades** give you additional goals on repeat runs. Open Mission Accolades from the main menu.
-- Separate Arcade and Classic best scores, accolades, and sound preference are saved to localStorage on the current browser/device.
+```sh
+npm test
+npm run build
+```
 
-### Controls
+Serve `dist/` with a static web server. ES modules require HTTP; opening `index.html` directly as a file is not supported. The only optional external resource is the Google Fonts stylesheet; system serif and sans-serif fallbacks are provided.
 
-| Action | PC / keyboard | Touch |
-|---|---|---|
-| Place a tower | Click tower then click open cell; hotkeys **1–6** | Tap tower then tap an open cell |
-| Inspect or upgrade | Click placed tower | Tap placed tower |
-| Direct-control railgun (Arcade) | **D**, then hold and aim with mouse | Tap **Take Control**, then hold and drag on the field |
-| Collect supply drops (Arcade) | Click glowing pickups | Tap glowing pickups |
-| Pause | **Space** | Pause button |
-| Change speed | **F** | 1× / 2× / 3× toggle |
-| Start next wave | **Enter** | Start Wave button |
-| Abilities | **Q**, **E**, **R**, then aim orbital strike | Tap ability; tap to aim orbital strike |
-| Cancel build / targeting | **Esc** | Tap selected unit again / another tower |
+Source layout:
 
-**On iPhone:** Rotate to landscape for a larger game field. The interface reflows for portrait too.
+- `index.html`, `styles.css`: responsive title, game HUD, dialogs, studio, and touch controls.
+- `js/engine.js`: seeded world simulation, encounters, weapons, enemies, guardians, and progression.
+- `js/music.js`: composition, Web Audio synthesis, effects, offline rendering, and PCM encoding.
+- `js/data.js`: worlds, musical palettes, unlocks, weapon data, and deterministic helpers.
+- `js/save.js`: validated browser archive and run persistence.
+- `js/render.js`, `js/sprites.js`: illustrated-world rendering and original vector characters.
+- `js/app.js`: input, interface, audio integration, and lifecycle.
+- `assets/worlds.webp`: original generated environment atlas.
+- `tests/game.test.mjs`: behavioral checks for progression, persistence, harmony, weapons, damage, and WAV structure.
+- `tests/browser.html`: local-only Web Audio verification and archive fixtures; not included in `dist/`. For local QA, copy it to `dist/qa.html`, serve `dist/`, and open `/qa.html`. Rebuild before publication to remove it.
 
-## Deploying
-
-GitHub Pages is supported by the workflow in the .github/workflows/deploy.yml file.
-
-1. Open **Settings → Pages** in this repository.
-2. Under **Build and deployment**, set **Source** to **GitHub Actions**.
-3. If the deploy hasn't run, open **Actions → Deploy tower defense game** and trigger it once.
-4. Your game's address is https://jh124.github.io/Don-t-play-This-Game/.
-
-Automatic deployments run on every push to the main branch. You can also download the repository and open index.html directly.
-
-## Source layout
-
-- index.html: game menu, canvas battlefield, status HUD, armory, and dialogs
-- styles.css: original responsive game layout
-- polish.css: expanded HUD, tech branches, performance grades, and visual polish
-- arcade.css: arcade controls, combat contracts, and mobile quick-build dock
-- game.js: engine, waves, enemies, upgrades, animations, achievements, and input
-- icon.svg: game favicon
-- .github/workflows/deploy.yml: GitHub Pages deployment
-
-No ads, purchase mechanics, account requirements, third-party game libraries, or back-end. The display font is loaded from Google Fonts when available; fallback fonts work offline. The game is an original work and is not affiliated with Bloons TD or Star Wars.
+GitHub Actions runs the tests, builds `dist/`, and publishes it to the repository’s existing GitHub Pages site on pushes to `main`. The repository name and public address are unchanged.

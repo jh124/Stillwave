@@ -1,143 +1,37 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#070d1b">
-  <meta name="description" content="Don't Play This Game — a dangerously addictive single-player sci-fi tower defense game.">
-  <title>Don't Play This Game — Tower Defense</title>
-  <link rel="icon" type="image/svg+xml" href="icon.svg">
-  <link rel="stylesheet" href="styles.css">
-  <link rel="stylesheet" href="polish.css">
-  <link rel="stylesheet" href="arcade.css">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#142c2b">
+<title>Stillwave — Find your sound</title><meta name="description" content="A gentle musical roguelike. Wander through six quiet worlds, discover new sounds, and take a little music home.">
+<link rel="icon" href="./icon.svg" type="image/svg+xml"><link rel="stylesheet" href="./styles.css?v=stillwave-1.0.0">
 </head>
 <body>
-  <div id="app">
-    <header class="site-header">
-      <a class="brand" href="./" aria-label="Don't Play This Game home">
-        <span class="brand-mark"><span>!</span></span>
-        <span class="brand-text">DON'T PLAY <strong>THIS GAME</strong><small>AN UNWISE USE OF YOUR TIME</small></span>
-      </a>
-      <div class="header-right">
-        <span class="header-status"><i></i> SYSTEM ONLINE</span>
-        <button id="soundButton" class="icon-button" type="button" title="Toggle sound" aria-label="Toggle sound">♫</button>
-      </div>
-    </header>
-
-    <main>
-      <section id="menuScreen" class="menu-screen">
-        <div class="menu-copy">
-          <div class="eyebrow"><span class="status-dot"></span> INCOMING TRANSMISSION / 001</div>
-          <h1>DON'T.<br><em>PLAY.</em><br>THIS GAME<span class="period">.</span></h1>
-          <p class="intro">One reactor. An entire enemy armada. An unreasonable number of turrets. <strong>You were warned.</strong></p>
-          <div class="menu-actions">
-            <button id="startButton" class="btn btn-primary btn-big" type="button"><span>▶</span> START ARCADE ASSAULT <span class="btn-arrow">↗</span></button>
-            <span class="tiny-caveat">FREE TO PLAY. EXPENSIVE IN FREE TIME.</span>
-          </div>
-          <div class="menu-divider"></div>
-          <div class="setup-heading"><span>00 / CHOOSE YOUR EXPERIENCE</span><span>NEW</span></div>
-          <div id="modeOptions" class="mode-options" role="group" aria-label="Game mode">
-            <button class="mode-card active" type="button" data-mode="arcade"><b>⚡ ARCADE ASSAULT</b><small>12 intense waves · rapid deployment · a gun you control · auto waves</small><span>RECOMMENDED</span></button>
-            <button class="mode-card" type="button" data-mode="classic"><b>◈ CLASSIC DEFENSE</b><small>20 waves · build at your pace · all the original strategy</small><span>ORIGINAL MODE</span></button>
-          </div>
-          <div class="setup-heading"><span>01 / CHOOSE YOUR BATTLEFIELD</span><span>3 SECTORS</span></div>
-          <div id="mapCards" class="map-cards" role="group" aria-label="Choose a map">
-            <button class="map-card selected" data-map="0" type="button"><span class="map-symbol">◈</span><span><b>NEON CROSSING</b><small>Winding industrial lanes</small></span></button>
-            <button class="map-card" data-map="1" type="button"><span class="map-symbol">⌁</span><span><b>REDLINE CANYON</b><small>Long, lethal corridors</small></span></button>
-            <button class="map-card" data-map="2" type="button"><span class="map-symbol">✳</span><span><b>GHOST CIRCUIT</b><small>Twisted reactor passages</small></span></button>
-          </div>
-          <div class="field-note"><span class="field-note-icon">◉</span><span><b>FIELD MANUAL</b> Build on open tiles. In Arcade Assault, take direct control of a railgun during combat. Glowing supply drops grant instant rewards. Kill hostiles for credits. Upgrade to level 2 to unlock two competing tech branches. Survive the assault. <strong>Don't blink.</strong></span></div>
-          <div class="setup-heading difficulty-heading"><span>02 / SET THE PAIN LEVEL</span><span>GOOD LUCK</span></div>
-          <div id="difficultyOptions" class="segmented" role="group" aria-label="Choose difficulty">
-            <button type="button" data-difficulty="0" class="active">NORMAL</button>
-            <button type="button" data-difficulty="1">HARD</button>
-            <button type="button" data-difficulty="2">INSANE</button>
-          </div>
-          <div class="best-record"><span id="bestLabel">YOUR ARCADE PERSONAL BEST</span><strong id="menuBest">WAVE 0</strong><span id="menuBestScore">0 POINTS</span></div>
-          <button id="dossierButton" type="button" class="dossier-button"><span>✦ MISSION ACCOLADES</span><strong id="dossierCount">0 / 8 UNLOCKED</strong><span>↗</span></button>
-        </div>
-        <div class="menu-art" aria-hidden="true">
-          <div class="orbit orbit-one"></div><div class="orbit orbit-two"></div><div class="orbit orbit-three"></div>
-          <div class="radar-line"></div>
-          <div class="reactor-icon"><div class="reactor-center"><span>!</span></div><div class="reactor-ring"></div></div>
-          <div class="floating-tag top-tag"><span class="tag-led"></span> SECTOR ALERT <b>LEVEL: CRITICAL</b></div>
-          <div class="floating-tag bottom-tag">HOSTILES DETECTED <strong>∞</strong></div>
-          <div class="crosshair crosshair-a">+</div><div class="crosshair crosshair-b">+</div>
-          <div class="art-coordinate">SYS_041 / EST. 2049<br>NO REFUNDS ON LOST TIME</div>
-        </div>
-      </section>
-
-      <section id="gameScreen" class="game-screen hidden">
-        <div class="game-topline">
-          <div class="sector-title"><span class="eyebrow">SECTOR DEFENSE // ACTIVE</span><strong id="sectorName">NEON CROSSING</strong></div>
-          <div class="stat-group">
-            <div class="stat"><small>CREDITS</small><strong class="gold" id="creditsValue">420</strong></div>
-            <div class="stat"><small>REACTOR</small><strong id="livesValue">25 <span class="stat-suffix">HP</span></strong></div>
-            <div class="stat"><small>WAVE</small><strong id="waveValue">0 <span class="stat-suffix">/ 20</span></strong></div>
-            <div class="stat"><small>SCORE</small><strong id="scoreValue">0</strong></div>
-          </div>
-          <div class="game-actions">
-            <button id="speedButton" class="small-control" type="button" title="Change game speed">1×</button>
-            <button id="pauseButton" class="small-control" type="button" title="Pause game">Ⅱ</button>
-            <button id="menuButton" class="small-control exit-control" type="button" title="Return to main menu">⌂</button>
-          </div>
-        </div>
-        <div class="game-layout">
-          <div class="battle-column">
-            <div class="battle-frame">
-              <div class="battle-topbar"><span><i></i> <span id="battleStatus">AWAITING DEPLOYMENT</span></span><span id="battleIndicator">THREAT: LOW</span></div>
-              <div id="canvasContainer" class="canvas-container">
-                <canvas id="gameCanvas" width="800" height="500" aria-label="Tower defense battlefield"></canvas>
-                <div id="bossBar" class="boss-bar hidden" aria-live="off"><span class="boss-bar-title">⚠ TITAN CLASS DETECTED</span><span class="boss-bar-hp" id="bossHealthText">100%</span><div class="boss-bar-track"><div id="bossHealthFill"></div></div></div>
-                <div id="canvasHint" class="canvas-hint">SELECT A TOWER, THEN TAP AN OPEN TILE</div>
-                <div id="floatingMessage" class="floating-message"></div>
-                <button id="aimOverlay" class="aim-overlay" type="button"><span>⌖</span> <b>TAKE CONTROL</b></button>
-                <div id="dropHint" class="drop-hint">✦ TAP GLOWING SUPPLY DROPS FOR BONUSES</div>
-              </div>
-              <div class="battle-footer"><span>◈ <span id="footerMap">NEON CROSSING</span></span><span id="waveProgress">READY FOR WAVE 01</span><span>DEFEND THE CORE ◆</span></div>
-            </div>
-            <div class="combat-readout">
-            <div class="readout-head"><span id="intelLabel">NEXT THREAT <b>FIRST CONTACT</b></span><span id="intelCounts">0 / 0 HOSTILES</span></div>
-            <div class="readout-track"><div id="waveMeterFill" class="readout-fill"></div></div>
-            <div class="readout-foot"><span id="enemyIntel">SCOUT DRONES · LIGHT ARMOR</span><span id="comboIntel">CHAIN ×0</span></div>
-          </div>
-          <div class="contract-panel hidden" id="contractPanel">
-              <span class="contract-icon">✧</span><span class="contract-copy"><small>OPTIONAL COMBAT CONTRACT · BONUS CREDITS</small><strong id="contractTitle">ASSIGNMENT PENDING</strong></span><span class="contract-progress" id="contractProgress">0 / 0</span>
-            </div>
-            <div class="gun-panel" id="gunPanel">
-              <button class="gun-toggle" type="button" id="gunButton" aria-pressed="false"><span class="gun-icon">⌖</span><span><strong>TAKE DIRECT CONTROL</strong><small>Hold and drag on the battlefield to shoot enemies</small></span><b id="gunKey">D</b></button>
-              <div class="gun-meter"><div class="gun-meter-header"><span>RAILGUN HEAT</span><b id="heatValue">0%</b></div><div class="gun-meter-track"><div id="heatFill"></div></div><small id="gunStatus">OFFLINE · MANUAL TARGETING DISABLED</small></div>
-            </div>
-            <div class="bottom-controls">
-              <div class="wave-callout"><span id="waveTag">NEXT UP / WAVE 01</span><strong id="waveDescription">Scout drones approaching</strong></div>
-              <button id="waveButton" class="btn btn-primary wave-button" type="button">▶ START WAVE 01</button>
-            </div>
-            <div class="abilities-area">
-              <div class="section-label"><span>TACTICAL ABILITIES</span><small>COOLDOWNS RESET BETWEEN RUNS</small></div>
-              <div class="abilities">
-                <button id="abilityOverdrive" type="button" class="ability" data-ability="overdrive"><span class="ability-icon overdrive">⚡</span><span><b>OVERDRIVE</b><small>Double fire rate · 8s</small></span><span class="ability-cooldown" id="cdOverdrive">READY</span></button>
-                <button id="abilityEmp" type="button" class="ability" data-ability="emp"><span class="ability-icon emp">❄</span><span><b>EMP BLAST</b><small>Freeze all enemies · 3s</small></span><span class="ability-cooldown" id="cdEmp">READY</span></button>
-                <button id="abilityStrike" type="button" class="ability" data-ability="strike"><span class="ability-icon strike">✦</span><span><b>ORBITAL STRIKE</b><small>Tap anywhere to obliterate</small></span><span class="ability-cooldown" id="cdStrike">READY</span></button>
-              </div>
-            </div>
-          </div>
-          <aside class="side-panel">
-            <div class="side-header"><span>ARMORY</span><span class="panel-indicator">06 DEPLOYABLE UNITS</span></div>
-            <div class="sidebar-section-heading"><span>BUILD TOWERS</span><small>SELECT → PLACE ON GRID</small></div>
-            <div id="towerList" class="tower-list"></div>
-            <div class="sidebar-divider"></div>
-            <div id="towerDetails" class="tower-details">
-              <div class="details-empty"><span class="details-empty-icon">◎</span><b>NO TOWER SELECTED</b><p>Select a deployed tower to view its upgrades, priority, and sell value.</p></div>
-            </div>
-            <div class="keyboard-hint"><span>HOTKEYS</span> 1–6 BUILD · D DIRECT AIM · Q/E/R ABILITIES · SPACE PAUSE · F SPEED · ESC CANCEL</div>
-          </aside>
-        </div>
-        <nav id="mobileBuildDock" class="mobile-build-dock" aria-label="Quick build towers"></nav>
-      </section>
-    </main>
-    <footer class="site-footer"><span>DON'T PLAY THIS GAME <span class="muted">© 2026</span></span><span>MADE TO BE PLAYED. NAMED TO BE IGNORED.</span></footer>
-  </div>
-  <div id="modalRoot" class="modal-root hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitle"></div>
-  <script src="game.js" defer></script>
-</body>
-</html>
+<div id="home" class="home">
+ <header class="site-header"><a class="wordmark" href="./" aria-label="Stillwave home"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M2 11q7-8 14 0t14 0M2 18q7-8 14 0t14 0M2 25q7-8 14 0t14 0"/></svg>stillwave<span class="wordmark-dot">®</span></a><nav><button id="archiveBtn" class="text-button">The collection <span id="collectionCount">0</span></button><button id="helpBtn" class="text-button">Field notes</button><button id="listenBtn" class="listen-button"><span class="sound-bars"><i></i><i></i><i></i><i></i></span><span id="listenLabel">Sound on</span></button></nav></header>
+ <main>
+  <section class="hero">
+   <div class="hero-copy"><p class="eyebrow"><span class="tiny-star">✧</span> A LITTLE ADVENTURE. AN EVER-CHANGING SOUNDTRACK.</p><h1>Take the<br>scenic <em>route.</em></h1><p class="hero-description">A gentle roguelike for wandering souls. <br>Find your way through quiet worlds.<br>Collect the sounds that make them yours.</p><div class="hero-actions"><button id="beginBtn" class="button primary">Begin wandering <span>↗</span></button><button id="resumeBtn" class="button secondary" hidden>Continue journey <span>→</span></button></div><p class="hero-footnote"><span class="small-orbit"></span> Every journey sounds a little different.</p></div>
+   <div class="hero-art" aria-label="An illustrated moonlit garden with lanterns, ferns, and stone pathways"><div class="hero-world atlas region-0"></div><div class="art-grain"></div><div class="floating-note note-one">♪</div><div class="floating-note note-two">♫</div><div class="art-label"><span class="small-orbit"></span><div><small>NOW DRIFTING THROUGH</small><p>Mosslight Gardens</p></div><span class="genre-tag">lofi</span></div><div class="art-caption">01 / 06 <span>somewhere softer</span></div></div>
+  </section>
+  <section class="journey-strip"><div><span class="strip-icon">⌁</span><p><b>Wander. Discover. Compose.</b><span>The world is your record collection.</span></p></div><div class="strip-stat"><b>6</b><span>musical worlds</span></div><div class="strip-stat"><b>36</b><span>sounds & discoveries</span></div><div class="strip-stat"><b>∞</b><span>ways to make it yours</span></div><div class="strip-end">NO RUSH.<br>JUST A LITTLE RHYTHM.</div></section>
+  <section class="worlds-section"><div class="section-heading"><div><p class="eyebrow">THE LONG WAY HOME</p><h2>Six worlds. A thousand little melodies.</h2></div><span class="muted">A full journey, about 70–90 minutes</span></div><div id="worldCards" class="world-cards"></div></section>
+ </main>
+ <footer><p>Made for a slower kind of adventure.</p><span>Headphones recommended <span class="footer-star">✧</span> Progress saves on this device</span><button id="homeStudioBtn" class="text-button" hidden>Open the studio ↗</button></footer>
+</div>
+<section id="game" class="game" hidden aria-label="Stillwave adventure">
+ <canvas id="world" tabindex="0" aria-label="Adventure field. Move with WASD or arrow keys; hold click or Space to attack; Shift to dash; E to gather echoes or use a gateway; Q to heal."></canvas>
+ <div class="game-vignette"></div>
+ <header class="game-top"><div class="location-pill glass"><span id="areaNumber">01</span><div><small id="genreLabel">LOFI</small><h2 id="areaLabel">Mosslight Gardens</h2></div></div><div class="objective-pill glass"><small id="passageLabel">PASSAGE 1 / 8</small><p id="objectiveLabel">Gather the three echoes</p><div class="passage-line"><i id="passageFill"></i></div></div><div class="game-actions"><span id="runClock" class="clock glass">00:00</span><button id="gameSoundBtn" class="icon-button glass" aria-label="Mute music" title="Mute music">♫</button><button id="pauseBtn" class="icon-button glass" aria-label="Pause game" title="Pause · Esc"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><rect x="4" y="2" width="2.5" height="12" rx=".8"/><rect x="10" y="2" width="2.5" height="12" rx=".8"/></svg></button></div></header>
+ <div id="bossHud" class="boss-hud glass" hidden><small>THE GUARDIAN OF THIS MOVEMENT</small><b id="bossName"></b><div><i id="bossFill"></i></div></div>
+ <div id="roomBanner" class="room-banner" aria-live="polite"></div>
+ <aside class="player-hud glass"><div class="health-label"><span><span class="heart-symbol">♡</span> <b id="healthText">110 / 110</b></span><small id="weaponLabel">MOONBLADE</small></div><div class="health-line"><i id="healthFill"></i></div><div class="player-bottom"><button id="healBtn" class="small-button" title="Q · Restore 45 health">✦ <span id="herbCount">3</span> <small>Q · Mend</small></button><span id="dashLabel">Shift · Drift</span></div></aside>
+ <div id="interactHint" class="interact-hint glass" hidden><kbd>E</kbd><span id="interactLabel">Gather echo</span><button id="interactBtn" class="small-button">Gather</button></div>
+ <div class="music-dock glass"><button id="mixerBtn" class="music-open"><span class="sound-bars"><i></i><i></i><i></i><i></i><i></i></span><span><small>YOUR EVER-CHANGING SOUNDTRACK</small><b id="musicSummary">Lofi · A minor · 76 BPM</b></span><span class="mixer-symbol">☷</span></button><div id="trackLights" class="track-lights"></div></div>
+ <div class="game-controls"><span><kbd>W A S D</kbd> move</span><span><kbd>SPACE / CLICK</kbd> attack</span><span><kbd>SHIFT</kbd> drift</span><span><kbd>M</kbd> music</span></div>
+ <div id="touchControls" class="touch-controls"><div id="joystick" class="joystick" aria-label="Drag to move"><i id="joystickKnob"></i></div><div class="touch-actions"><button id="touchDash" aria-label="Dash">Drift</button><button id="touchAttack" aria-label="Hold to attack">Attack</button></div></div>
+</section>
+<div id="toastStack" class="toast-stack" aria-live="polite" aria-atomic="false"></div>
+<dialog id="modal" class="modal"><div id="modalBody"></div></dialog>
+<noscript><div class="no-script">Stillwave needs JavaScript to play and compose its music.</div></noscript>
+<script type="module" src="./js/app.js"></script>
+</body></html>
