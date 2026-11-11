@@ -12,3 +12,11 @@ Use case: stylized-concept. Asset type: production environment atlas for a beaut
 `cabin.webp` is a production illustration generated for this update and converted to WebP without changing its content. It depicts the same scarf-wearing traveler seated at a mixing board, two speakers, a rainlit window, hearth, rune shelf, and wooden door in a cozy painterly cabin. It contains no text or interface elements. The mixer and door are paired with responsive HTML interaction regions positioned in the same image coordinates. The dynamic collection rack reflects the actual save, independently of the decorative stones in the painting.
 
 Art direction: warm, hand-painted storybook RPG interior; detailed woodwork, amber lanterns, greenery, records, moonlit rain outside, green coat and cream scarf, a clearly visible mixer near the center and door at the right; a calm place to return to between journeys.
+
+## Living cabin
+
+The original `cabin.webp` remains intact. `js/cabin.js` animates it in a 24-second Canvas 2D loop: a small upper-body rocking displacement, foliage displacement restricted to window panes, falling rain restricted to glass, and rising steam. The room, mixer, and window frames stay still. Reduced Motion and browsers without canvas support use the original painting.
+
+`cabin-steam-plate.webp` is a 96×96 crop at (944, 512) from a steam-free version of the cabin, prepared with the built-in image generation tool. Only the old vapor area is blended over the original before drawing fresh steam; the rest of the generated image is not used.
+
+Edit prompt: Remove only the small white wisps of steam immediately above the tea mug (approximately x=965–1020, y=530–596 in the 1536×1024 cabin). Reconstruct the existing wooden wall and speaker edge behind it. Preserve the tea mug, speaker, traveler, mixer, furniture, rain, window, colors, lighting, dimensions, camera, and composition. Do not redesign, add text, or move anything.

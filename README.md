@@ -2,7 +2,7 @@
 
 **[Play Stillwave](https://jh124.github.io/Stillwave/)**
 
-![The Stillwave cabin studio](assets/preview.webp)
+![The Stillwave cabin studio](assets/living-cabin-preview.jpg)
 
 A musical action roguelike with a small cabin to come home to. Wander through six illustrated worlds, bind permanent Waychimes, and bring new sounds back to your studio. This replaces the original tower-defense game; its source remains in Git history.
 
@@ -40,7 +40,7 @@ Discoveries are added to two places: this journey’s musical palette and your p
 
 ## Your cabin studio
 
-The start and end of the journey are the same place: a warm illustrated cabin, with the traveler seated at a table between a pair of speakers and a mixing desk. Hover or keyboard-focus the mixer to open music settings; hover or focus the door to choose a weapon, choose a difficulty, or resume a saved journey. Touch layouts also provide explicit Mixer and Play buttons. The studio is available from the beginning and grows as you discover sounds.
+The start and end of the journey are the same place: a warm illustrated cabin, with the traveler seated at a table between a pair of speakers and a mixing desk. Hover or keyboard-focus the mixer to open music settings; hover or focus the door to choose a weapon, choose a difficulty, or resume a saved journey. Touch layouts also provide explicit Mixer and Play buttons. The studio is available from the beginning and grows as you discover sounds. The cabin illustration loops over 24 seconds, with gentle traveler rocking, rising mug steam, falling rain, and swaying foliage outside the window. The room stays still. Reduced Motion uses the original still image, as do browsers without canvas support; animation pauses behind dialogs, during gameplay, and while the page is hidden.
 
 Complete the six guardians and enter the final gateway to return home with the **regular studio palette unlocked**. Every genre, instrument, track, key, meter, tempo control, and effect becomes available. Change track levels and arrangement density, or request a new melody for another seeded composition. Two additional, permanent studio music features are exclusive to finishing **Steady**. Until a Steady clear, the bottom of the mixer shows a generic locked section; it does not display the rewards’ names or controls. Finishing Gentle, collecting every regular sound, or selecting Steady does not unlock them. Once earned, their settings save with the cabin mix, independently of fresh journeys. Existing saves retain their progress; old completion records do not identify the difficulty of the winning run, so they leave the new rewards locked. There is no song download or export screen.
 
@@ -91,6 +91,8 @@ Source layout:
 - `js/music.js`: composition, Web Audio synthesis, live effects, and development audio encoding.
 - `js/data.js`: worlds, musical palettes, unlocks, Waychimes, difficulty curves, weapons, and deterministic helpers.
 - `js/save.js`: validated browser archive and run persistence.
+- `js/cabin.js`: seamless canvas animation of the studio painting, window rain and foliage, mug steam, and reduced-motion fallback.
+- `tests/cabin.test.mjs`, `tests/cabin.html`: crop alignment and live rendering checks for motion regions, seam continuity, stationary architecture, and still-image fallbacks.
 - `js/render.js`, `js/sprites.js`: illustrated-world rendering and original vector characters.
 - `js/app.js`, `js/ui.js`, `js/mobile.js`: input, cabin/run music separation, interface, audio integration, mobile orientation, and lifecycle.
 - `assets/worlds.webp`, `assets/cabin.webp`: original generated environments and cabin illustration.

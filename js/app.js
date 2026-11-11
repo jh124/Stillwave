@@ -1,15 +1,17 @@
-import {REGIONS,WEAPONS,UNLOCKS,BASE_UNLOCKS,LAYERS,INSTRUMENTS,KEYS,SCALES,METERS,DEFAULT_MUSIC,PASSAGES,PASSAGE_SECONDS,WAYCHIMES,BLESSINGS,clamp,newSeed,safeMusic} from './data.js?v=2.2.1';
-import {readArchive,writeArchive,grantUnlock,grantNext,readRun,writeRun,clearRun,mergeRunRunes,completeJourney} from './save.js?v=2.2.1';
-import {MusicEngine} from './music.js?v=2.2.1';
-import {Journey} from './engine.js?v=2.2.1';
-import {Renderer} from './render.js?v=2.2.1';
-import {MobileLayout} from './mobile.js?v=2.2.1';
-import {esc,formatTime,closeMarkup,header,weaponArt,runeGlyph,decorateIcons} from './ui.js?v=2.2.1';
+import {REGIONS,WEAPONS,UNLOCKS,BASE_UNLOCKS,LAYERS,INSTRUMENTS,KEYS,SCALES,METERS,DEFAULT_MUSIC,PASSAGES,PASSAGE_SECONDS,WAYCHIMES,BLESSINGS,clamp,newSeed,safeMusic} from './data.js?v=2.3.0';
+import {readArchive,writeArchive,grantUnlock,grantNext,readRun,writeRun,clearRun,mergeRunRunes,completeJourney} from './save.js?v=2.3.0';
+import {MusicEngine} from './music.js?v=2.3.0';
+import {Journey} from './engine.js?v=2.3.0';
+import {Renderer} from './render.js?v=2.3.0';
+import {CabinAnimation} from './cabin.js?v=2.3.0';
+import {MobileLayout} from './mobile.js?v=2.3.0';
+import {esc,formatTime,closeMarkup,header,weaponArt,runeGlyph,decorateIcons} from './ui.js?v=2.3.0';
 const $=id=>document.getElementById(id);
 let archive=readArchive(),savedRun=readRun();mergeRunRunes(archive,savedRun);
 let studioMusic=safeMusic(archive.music,archive.unlocks,archive.cleared,archive.steadyCleared),music=studioMusic,scene='studio',game=null,paused=false,modalMode='',musicReturn='studio',collectionReturn='studio',selectedWeapon='sword',accountedSeconds=0,checkpointAt=0,last=performance.now(),hudAt=0,muted=archive.muted;
 studioMusic.volume=archive.volume;
 const audio=new MusicEngine(music,archive.studioSeed),renderer=new Renderer($('world')),keys=new Set(),modal=$('modal');
+const cabin=new CabinAnimation($('cabinAnimation'),$('cabinArt'));
 const input={mouseDown:false,touchAttack:false,aimX:0,aimY:0,hasAim:false,interact:false,heal:false,dash:false,joyX:0,joyY:0};
 let storageWarning=false,bannerTimer,mixerPage='tracks',helpPage='guide',archivePage=0;
 const mobile=new MobileLayout({onChange:()=>{layoutCabin();syncPanelTabs();},beforePortrait:()=>{clearInput();if(game?.state==='playing'&&!modal.open)showPause();}});
@@ -20,13 +22,13 @@ function owned(id){return palette().includes(id);}
 function saveMix(){if(scene==='journey'&&game){game.music=music;writeRun(game.checkpoint());}else studioMusic=music;persist();}
 function setVolume(value){archive.volume=clamp(Number(value),0,1);studioMusic.volume=archive.volume;music.volume=archive.volume;if(game)game.music.volume=archive.volume;syncMusic();saveMix();}
 function toast(title,desc='',discovery=false){const el=document.createElement('div');el.className='toast'+(discovery?'':' simple');el.innerHTML=discovery?`<small>FOUND FOR THIS JOURNEY · ${esc(title.kind.toUpperCase())}</small><b>♪ ${esc(title.name)}</b><p>${esc(title.desc)} Kept in the cabin collection.</p>`:`<b>${esc(title)}</b>${desc?`<p>${esc(desc)}</p>`:''}`;$('toastStack').append(el);setTimeout(()=>el.remove(),discovery?6000:4500);}
-function setMotion(){document.body.classList.toggle('reduced-motion',archive.reducedMotion);renderer.reducedMotion=archive.reducedMotion||matchMedia('(prefers-reduced-motion:reduce)').matches;}
+function setMotion(){document.body.classList.toggle('reduced-motion',archive.reducedMotion);renderer.reducedMotion=archive.reducedMotion||matchMedia('(prefers-reduced-motion:reduce)').matches;cabin.setReducedMotion(renderer.reducedMotion);}
 function runeSlots(){return WAYCHIMES.map(r=>{const choice=archive.runes[r.id],blessing=BLESSINGS[choice],label=`${r.name} · ${blessing?blessing.label+' · '+blessing.short:'Not yet found'}`;return `<span class="rune-slot ${choice?'bound':'unfound'}" style="--rune-color:${blessing?.color||'#89968c'}" title="${esc(label)}" aria-label="${esc(label)}">${runeGlyph()}</span>`;}).join('');}
 function refreshRunes(){const count=Object.keys(archive.runes).length;for(const id of ['runeSlots','homeRuneSlots'])$(id).innerHTML=runeSlots();for(const id of ['runeCount','homeRuneCount'])$(id).textContent=`${count} / 12`;}
 function refreshHome(){
  const n=UNLOCKS.filter(u=>archive.unlocks.includes(u.id)).length;$('collectionCount').textContent=n;$('studioMixLabel').textContent=`${REGIONS[studioMusic.genre].genre} · ${studioMusic.key} ${studioMusic.scale} · ${Math.round(studioMusic.bpm)} BPM`;
  $('doorAction').textContent=savedRun?'Continue your journey':'Begin a journey';$('doorDetail').textContent=savedRun?REGIONS[savedRun.area].name:'Choose a companion. Follow a note.';
- $('studioReward').hidden=!archive.cleared;$('studioReward').innerHTML='<span>✧</span> '+(archive.steadyCleared?'EVERY NOTE · STEADY COMPLETE':'THE STUDIO IS YOURS');$('studioCaption').textContent=archive.steadyCleared?'Every sound has found a home. The complete studio is yours.':archive.cleared?'The cabin is full of music. Two notes still wait beyond the door.':'A place for the sounds you bring home.';refreshRunes();decorateIcons($('home'));
+ $('studioCaption').textContent=archive.steadyCleared?'Every sound has found a home. The complete studio is yours.':archive.cleared?'The cabin is full of music. Two notes still wait beyond the door.':'A place for the sounds you bring home.';refreshRunes();decorateIcons($('home'));
 }
 function refreshAudioUI(){
  const playing=audio.audible;document.body.classList.toggle('music-playing',playing);
@@ -180,6 +182,7 @@ window.addEventListener('blur',()=>{clearInput();if(game?.state==='playing'&&!mo
 const openDoor=()=>{mobile.requestLandscape();showSetup();};$('beginBtn').onclick=openDoor;$('mobilePlay').onclick=openDoor;const openMixer=()=>{showMusic('studio');mobile.requestLandscape();};$('homeStudioBtn').onclick=openMixer;$('mobileMixer').onclick=openMixer;$('archiveBtn').onclick=showArchive;$('helpBtn').onclick=showHelp;$('pauseBtn').onclick=showPause;$('mixerBtn').onclick=()=>showMusic('journey');$('runeHudButton').onclick=showRunes;$('homeRuneButton').onclick=showRunes;$('gameSoundBtn').onclick=toggleMute;$('listenBtn').onclick=toggleMute;
 function frame(now){
  const dt=Math.min((now-last)/1000,.05);last=now;
+ cabin.draw(now,{visible:scene==='studio'&&!document.hidden&&!modal.open&&!mobile.blocked,positionX:matchMedia('(max-width:760px)').matches?.63:.5});
  if(game&&!$('game').hidden){
   if(!paused&&!modal.open&&!mobile.blocked){const x=(keys.has('KeyD')||keys.has('ArrowRight')?1:0)-(keys.has('KeyA')||keys.has('ArrowLeft')?1:0)+input.joyX,y=(keys.has('KeyS')||keys.has('ArrowDown')?1:0)-(keys.has('KeyW')||keys.has('ArrowUp')?1:0)+input.joyY;
    game.update(dt,{x,y,attack:input.mouseDown||input.touchAttack||keys.has('Space'),dash:input.dash||keys.has('ShiftLeft')||keys.has('ShiftRight'),heal:input.heal,interact:input.interact,autoAim:input.touchAttack||archive.autoAim&&!input.mouseDown,aimX:input.hasAim?input.aimX:undefined,aimY:input.hasAim?input.aimY:undefined});input.dash=input.heal=input.interact=false;if(game&&game.elapsed-checkpointAt>20){checkpointAt=game.elapsed;checkpoint();}
@@ -188,4 +191,5 @@ function frame(now){
  }
  requestAnimationFrame(frame);
 }
+matchMedia('(prefers-reduced-motion:reduce)').addEventListener('change',setMotion);
 audio.onStateChange=refreshAudioUI;audio.mute(muted);setMotion();syncMusic();refreshHome();persist();mobile.update();layoutCabin();requestAnimationFrame(frame);

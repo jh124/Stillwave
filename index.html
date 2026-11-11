@@ -3,18 +3,18 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#142c2b"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Stillwave — Find your sound</title><meta name="description" content="A gentle musical roguelike. Wander through six quiet worlds, discover new sounds, and take a little music home.">
-<link rel="icon" href="./icon.svg?v=2.2.1" type="image/svg+xml" sizes="any"><link rel="icon" href="./favicon.ico?v=2.2.1" sizes="16x16 32x32 48x48"><link rel="icon" href="./assets/favicon-32.png?v=2.2.1" type="image/png" sizes="32x32"><link rel="apple-touch-icon" href="./assets/apple-touch-icon.png?v=2.2.1" sizes="180x180"><link rel="stylesheet" href="./styles.css?v=stillwave-2.2.1"><link rel="stylesheet" href="./mobile.css?v=2.2.1"><link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./icon.svg?v=2.3.0" type="image/svg+xml" sizes="any"><link rel="icon" href="./favicon.ico?v=2.3.0" sizes="16x16 32x32 48x48"><link rel="icon" href="./assets/favicon-32.png?v=2.3.0" type="image/png" sizes="32x32"><link rel="apple-touch-icon" href="./assets/apple-touch-icon.png?v=2.3.0" sizes="180x180"><link rel="stylesheet" href="./styles.css?v=stillwave-2.3.0"><link rel="stylesheet" href="./mobile.css?v=2.3.0"><link rel="manifest" href="./manifest.webmanifest">
 </head>
 <body>
 <main id="home" class="cabin-home" aria-label="Your cabin studio"><h1 class="sr-only">Stillwave · Your cabin studio</h1>
  <div id="cabinScene" class="cabin-scene">
   <img id="cabinArt" class="cabin-art" src="./assets/cabin.webp" alt="Your traveler sits at a wooden table in a warm cabin studio, with speakers, a mixer board, and a door leading into the moonlit garden." draggable="false">
+  <canvas id="cabinAnimation" class="cabin-animation" aria-hidden="true"></canvas>
   <div class="cabin-atmosphere" aria-hidden="true"></div>
   <button id="homeStudioBtn" class="scene-hotspot mixer-hotspot" data-hotspot="mixer" data-x=".475" data-y=".50" data-w=".13" data-h=".12" aria-label="Open the studio mixer" aria-keyshortcuts="m"><span class="hotspot-pin" aria-hidden="true"></span><span class="hotspot-label"><small>AT THE MIXING DESK</small><b>Shape your sound</b><span>Open the studio mixer <i>♪</i></span></span></button>
   <button id="beginBtn" class="scene-hotspot door-hotspot" data-hotspot="door" data-x=".658" data-y=".145" data-w=".153" data-h=".526" aria-label="Open the cabin door to play"><span class="hotspot-pin" aria-hidden="true"></span><span class="hotspot-label"><small>BEYOND THE THRESHOLD</small><b id="doorAction">Begin a journey</b><span id="doorDetail">Choose a companion. Follow a note.</span></span></button>
  </div>
  <header class="cabin-header"><a class="wordmark" href="./" aria-label="Stillwave studio"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M2 11q7-8 14 0t14 0M2 18q7-8 14 0t14 0M2 25q7-8 14 0t14 0"/></svg>stillwave</a><span class="cabin-label">THE STUDIO</span><nav><button id="archiveBtn" class="text-button">The collection <span id="collectionCount">1</span></button><button id="helpBtn" class="text-button">Field notes</button><button id="listenBtn" class="listen-button"><span class="sound-bars"><i></i><i></i><i></i><i></i></span><span id="listenLabel">Sound on</span></button></nav></header>
- <div id="studioReward" class="studio-reward" hidden><span>✧</span> THE STUDIO IS YOURS</div>
  <aside class="cabin-caption glass"><small>A LITTLE ROOM OF YOUR OWN</small><p id="studioCaption">A place for the sounds you bring home.</p><span id="studioMixLabel">Lofi · A minor · 76 BPM</span></aside>
  <button id="homeRuneButton" class="home-rune-rack glass" aria-label="Inspect your Waychime runes"><span class="rune-rack-label">WAYCHIMES <b id="homeRuneCount">0 / 12</b></span><span id="homeRuneSlots" class="rune-slots"></span></button>
  <div class="cabin-hint">Hover the mixer to make music. Hover the door to wander.</div>
@@ -37,5 +37,5 @@
 <dialog id="modal" class="modal"><div id="modalBody"></div></dialog>
 <dialog id="rotatePrompt" class="rotate-prompt" aria-labelledby="rotateTitle"><svg viewBox="0 0 96 76" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2"><rect x="23" y="22" width="50" height="30" rx="5"/><path d="M66 23v28M9 39a30 30 0 0 1 48-22m-1-11 2 12-12-1M87 37a30 30 0 0 1-48 22m1 11-2-12 12 1"/></svg><p class="eyebrow">A WIDER LITTLE WORLD</p><h2 id="rotateTitle">Turn your phone sideways.</h2><p>Stillwave plays in landscape. Your journey will wait while you rotate.</p><button id="rotateFullscreen" class="button primary" hidden>Enter landscape</button></dialog>
 <noscript><div class="no-script">Stillwave needs JavaScript to play and compose its music.</div></noscript>
-<script type="module" src="./js/app.js?v=2.2.1"></script>
+<script type="module" src="./js/app.js?v=2.3.0"></script>
 </body></html>

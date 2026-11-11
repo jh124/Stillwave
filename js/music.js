@@ -1,4 +1,4 @@
-import {REGIONS,KEYS,METERS,seeded,scaleNote,progression,clamp} from './data.js?v=2.2.1';
+import {REGIONS,KEYS,METERS,seeded,scaleNote,progression,clamp} from './data.js?v=2.3.0';
 export function beatSeconds(s){return 60/clamp(s.bpm,60,96)*(s.meter==='6/8'?.5:1);}
 export function barSeconds(s){return beatSeconds(s)*METERS[s.meter];}
 export function grooveTime(time,s){

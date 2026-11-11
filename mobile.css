@@ -44,7 +44,6 @@
 .mobile-layout .cabin-mobile-actions .button{flex:1;min-height:42px;gap:12px;font-size:10px;padding:10px 13px;background:#223e30df;border-color:#d9d1ac63}
 .mobile-layout .cabin-mobile-actions .primary{background:#d6d3a5e8;color:#243d2c;border-color:#e3d4ac}
 .mobile-layout .cabin-hint{display:none}
-.mobile-layout .studio-reward{top:64px;left:calc(14px + env(safe-area-inset-left));right:auto;transform:none;font-size:6px;padding:8px 12px;letter-spacing:1px}
 .mobile-layout .hotspot-label{width:170px;padding:10px 13px}
 .mobile-layout .hotspot-label b{font-size:23px;margin:0 0 4px}
 .mobile-layout .hotspot-label>small{display:none}
