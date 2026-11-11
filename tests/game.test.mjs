@@ -2,8 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {Journey,placeEchoShrines} from '../js/engine.js';
 import {REGIONS,UNLOCKS,BASE_UNLOCKS,DEFAULT_MUSIC,LAYERS,METERS,SCALES,KEYS,WEAPONS,seeded,safeMusic,campaignMinimumSeconds,PASSAGE_SECONDS,WAYCHIMES,BLESSINGS,difficultyTuning,fieldMusic} from '../js/data.js';
-import {composeBar,barSeconds,encodeWav} from '../js/music.js';
-import {readArchive,writeArchive,grantNext,grantUnlock,readRun,writeRun,clearRun,mergeRunRunes} from '../js/save.js';
+import {composeBar,barSeconds} from '../js/music.js';
+import {readArchive,writeArchive,grantNext,grantUnlock,readRun,writeRun,clearRun,mergeRunRunes,completeJourney} from '../js/save.js';
 const memory=()=>{const map=new Map();return {getItem:k=>map.get(k)||null,setItem:(k,v)=>map.set(k,v),removeItem:k=>map.delete(k)};};
 const all=[...BASE_UNLOCKS,...UNLOCKS.map(u=>u.id)];
 test('campaign has at least an hour of actual passages before six bosses',()=>{assert.ok(campaignMinimumSeconds()>=3600);assert.equal(REGIONS.length,6);assert.equal(new Set(REGIONS.map(r=>r.genre)).size,6);});
@@ -77,4 +77,31 @@ test('ongoing run checkpoints retain their own sounds and mix independently of t
 });
 test('legacy saves keep studio sounds and convert reached combat blessings into permanent runes',()=>{
  const store=memory();store.setItem('stillwave.archive.v1',JSON.stringify({version:1,unlocks:all,music:{...DEFAULT_MUSIC,key:'D',bpm:89},cleared:false}));store.setItem('stillwave.run.v1',JSON.stringify({version:1,seed:99,weapon:'bow',difficulty:'standard',area:1,passage:4,elapsed:1200,health:70,boons:['edge','heart','flow'],herbs:2}));const a=readArchive(store),r=readRun(store);mergeRunRunes(a,r);assert.equal(a.version,2);assert.equal(a.music.key,'D');assert.deepEqual(a.runes,{'moss-3':'edge','moss-6':'heart','neon-3':'flow'});assert.ok(r.unlocks.includes('track:bass'));assert.ok(r.unlocks.includes('instrument:rhodes'));assert.ok(!r.unlocks.includes('key:F'));assert.equal(r.music.genre,1);assert.equal(r.health,70);
+});
+
+test('only a completed Steady journey awards the extra studio features',()=>{
+ const a=readArchive(memory());let firstSteady=false;
+ const traveler=difficulty=>new Journey({seed:771,area:5,passage:8,difficulty,onEvent:e=>{if(e.type==='victory')firstSteady=completeJourney(a,difficulty);}});
+ const gentle=traveler('gentle');gentle.hitEnemy(gentle.boss,1e6,0,0);assert.equal(a.cleared,false);gentle.advance();assert.equal(a.cleared,true);assert.equal(a.steadyCleared,false);assert.equal(firstSteady,false);assert.ok(UNLOCKS.every(u=>a.unlocks.includes(u.id)));
+ const lost=traveler('standard');lost.player.invincible=0;lost.damagePlayer(9999);assert.equal(lost.state,'dead');assert.equal(a.steadyCleared,false);
+ const steady=traveler('standard');steady.hitEnemy(steady.boss,1e6,0,0);assert.equal(a.steadyCleared,false);steady.advance();assert.equal(steady.state,'won');assert.equal(a.steadyCleared,true);assert.equal(firstSteady,true);
+ const later=traveler('gentle');later.hitEnemy(later.boss,1e6,0,0);later.advance();assert.equal(a.steadyCleared,true);assert.equal(firstSteady,false);
+});
+test('old completion saves and a selected Steady difficulty do not infer an unrecorded Steady win',()=>{
+ for(const version of [1,2]){const store=memory();store.setItem('stillwave.archive.v1',JSON.stringify({version,cleared:true,difficulty:'standard',unlocks:all,music:{...DEFAULT_MUSIC,bloom:1,chorus:1}}));const a=readArchive(store);assert.equal(a.cleared,true);assert.equal(a.steadyCleared,false);assert.equal(a.music.bloom,0);assert.equal(a.music.chorus,0);assert.ok(UNLOCKS.every(u=>a.unlocks.includes(u.id)));}
+ const regular=safeMusic({...DEFAULT_MUSIC,bloom:1,chorus:1},all,true);assert.equal(regular.bloom,0);assert.equal(regular.chorus,0);
+});
+test('Steady rewards and their studio mix persist through reload and fresh journeys',()=>{
+ const store=memory(),a=readArchive(store);completeJourney(a,'standard');a.music=safeMusic({...DEFAULT_MUSIC,bloom:.63,chorus:.42,key:'D'},a.unlocks,true,a.steadyCleared);writeArchive(a,store);
+ const restored=readArchive(store);assert.equal(restored.steadyCleared,true);assert.equal(restored.music.bloom,.63);assert.equal(restored.music.chorus,.42);assert.equal(restored.music.key,'D');
+ const fresh=new Journey({seed:144,music:restored.music,unlocks:restored.unlocks});assert.equal(fresh.music.bloom,0);assert.equal(fresh.music.chorus,0);writeRun(fresh.checkpoint(),store);assert.equal(readRun(store).music.bloom,0);assert.equal(readArchive(store).music.bloom,.63);
+ const bounded=safeMusic({...DEFAULT_MUSIC,bloom:9,chorus:-2},all,true,true);assert.equal(bounded.bloom,1);assert.equal(bounded.chorus,0);
+});
+test('the extra harmony adds only in-key chord voices and leaves other tracks unchanged',()=>{
+ for(let genre=0;genre<6;genre++)for(const scale of Object.keys(SCALES))for(const meter of Object.keys(METERS)){
+  const settings=safeMusic({...DEFAULT_MUSIC,genre,scale,meter,key:'D',bloom:0},all,true,true),dry=composeBar(settings,22,3),wet=composeBar({...settings,bloom:1},22,3);
+  assert.ok(wet.filter(e=>e.layer==='chords').length>dry.filter(e=>e.layer==='chords').length);assert.deepEqual(wet.filter(e=>e.layer!=='chords'),dry.filter(e=>e.layer!=='chords'));
+  for(const e of wet.filter(e=>e.layer==='chords')){assert.ok(SCALES[scale].includes(((e.note-KEYS.D)%12+12)%12));assert.ok(e.t>=0&&e.t<barSeconds(settings));assert.ok(e.velocity>0&&Number.isFinite(e.duration));}
+  assert.deepEqual(composeBar({...settings,bloom:1},22,3),wet);assert.deepEqual(composeBar({...settings,bloom:1,layers:{...settings.layers,chords:false}},22,3).filter(e=>e.layer==='chords'),[]);
+ }
 });

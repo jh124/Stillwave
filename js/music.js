@@ -1,4 +1,4 @@
-import {REGIONS,KEYS,METERS,seeded,scaleNote,progression,clamp} from './data.js?v=2.0.0';
+import {REGIONS,KEYS,METERS,seeded,scaleNote,progression,clamp} from './data.js?v=2.1.0';
 export function beatSeconds(s){return 60/clamp(s.bpm,60,96)*(s.meter==='6/8'?.5:1);}
 export function barSeconds(s){return beatSeconds(s)*METERS[s.meter];}
 export function grooveTime(time,s){
@@ -15,7 +15,7 @@ export function composeBar(s,seed,bar){
  const push=(layer,t,n,d,v=.5,inst)=>{if(s.layers[layer])events.push({layer,t:grooveTime(Math.max(0,t),s),note:n,duration:d,velocity:v*(s.levels[layer]??.6),instrument:inst||s.instruments[layer]});};
  const chord=[deg,deg+2,deg+4,...(genre===0||genre===3||genre===4?[deg+6]:[])],inversion=Math.floor(rng()*3);
  const groove=i=>i*step;
- if(s.layers.chords){const times=genre===3?[0,beat*1.5,beat*2.5].filter(t=>t<beat*beats):[0];for(const t of times)chord.forEach((n,i)=>push('chords',t+i*.008,scaleNote(root,s.scale,n)+(i<inversion?12:0),genre===3?beat*.9:beat*beats*.86,.27+detail()*.06));}
+ if(s.layers.chords){const times=genre===3?[0,beat*1.5,beat*2.5].filter(t=>t<beat*beats):[0];for(const t of times){chord.forEach((n,i)=>push('chords',t+i*.008,scaleNote(root,s.scale,n)+(i<inversion?12:0),genre===3?beat*.9:beat*beats*.86,.27+detail()*.06));const bloom=clamp(s.bloom||0,0,1);if(bloom>0)for(const [i,n] of [deg+6,deg+8].filter(n=>!chord.includes(n)).entries())push('chords',t+.032+i*.008,scaleNote(root,s.scale,n),genre===3?beat*.9:beat*beats*.86,.24*bloom);}}
  if(s.layers.pad)for(const n of [deg,deg+4,deg+9])push('pad',0,scaleNote(root-12,s.scale,n),beat*beats*1.1,.19);
  if(s.layers.bass){for(let b=0;b<beats;b++){if(b===0||b===Math.floor(beats/2)||(genre===3&&b===beats-1))push('bass',b*beat,scaleNote(root-24,s.scale,deg+(b===beats-1?4:0)),beat*(genre===4?1.6:.8),.62);}}
  if(s.layers.drums){for(let i=0;i<steps;i++){
@@ -38,9 +38,16 @@ export function createMusicGraph(ctx,s,destination){
  const dry=ctx.createGain();dry.gain.value=.84;const convolver=ctx.createConvolver();convolver.buffer=impulse(ctx);const wet=ctx.createGain();wet.gain.value=(s.reverb||0)*.50;
  const echo=delayParameters(s),delay=ctx.createDelay(2),feedback=ctx.createGain(),delayMix=ctx.createGain(),echoLow=ctx.createBiquadFilter(),echoHigh=ctx.createBiquadFilter();delay.delayTime.value=echo.time;feedback.gain.value=echo.feedback;delayMix.gain.value=echo.mix;echoLow.type='lowpass';echoLow.frequency.value=3000;echoLow.Q.value=.4;echoHigh.type='highpass';echoHigh.frequency.value=160;echoHigh.Q.value=.4;
  const compressor=ctx.createDynamicsCompressor();compressor.threshold.value=-20;compressor.knee.value=20;compressor.ratio.value=3.2;compressor.attack.value=.012;compressor.release.value=.3;
+ // A pair of slow, independently modulated taps adds a soft stereo chorus.
+ // The original dry path is unchanged, so zero is a complete bypass.
+ const chorusMix=ctx.createGain(),chorusStereo=ctx.createChannelMerger(2);chorusMix.gain.value=clamp(s.chorus||0,0,1)*.28;
+ const chorusVoices=[{time:.021,rate:.17,depth:.003},{time:.029,rate:.13,depth:.0037}].map((voice,channel)=>{
+  const tap=ctx.createDelay(.1),lfo=ctx.createOscillator(),depth=ctx.createGain();tap.delayTime.value=voice.time;lfo.frequency.value=voice.rate;depth.gain.value=voice.depth;
+  lfo.connect(depth);depth.connect(tap.delayTime);filter.connect(tap);tap.connect(chorusStereo,0,channel);lfo.start();return {tap,lfo,depth};
+ });chorusStereo.connect(chorusMix);chorusMix.connect(compressor);
  const master=ctx.createGain();master.gain.value=(s.volume??.65)*.8;
  input.connect(filter);filter.connect(dry);dry.connect(compressor);filter.connect(convolver);convolver.connect(wet);wet.connect(compressor);filter.connect(delay);delay.connect(echoLow);echoLow.connect(echoHigh);echoHigh.connect(feedback);feedback.connect(delay);echoHigh.connect(delayMix);delayMix.connect(compressor);compressor.connect(master);master.connect(destination);
- return {input,filter,wet,delay,feedback,delayMix,master,noise:noise(ctx)};
+ return {input,filter,wet,delay,feedback,delayMix,chorusMix,chorusVoices,master,noise:noise(ctx)};
 }
 function percussion(ctx,out,e,t,buf){
  const gain=ctx.createGain();gain.connect(out);const v=e.velocity;
@@ -61,7 +68,7 @@ export class MusicEngine{
  constructor(settings,seed){this.settings=structuredClone(settings);this.seed=seed;this.ctx=null;this.bar=0;this.next=0;this.muted=false;this.onBar=()=>{};}
  async start(){if(!this.ctx){const C=globalThis.AudioContext||globalThis.webkitAudioContext;if(!C)throw new Error('This browser does not support Web Audio.');this.ctx=new C();this.graph=createMusicGraph(this.ctx,this.settings,this.ctx.destination);}await this.ctx.resume();if(!this.timer){this.next=this.ctx.currentTime+.08;this.tick();this.timer=setInterval(()=>this.tick(),40);}}
  tick(){if(!this.ctx||this.ctx.state!=='running')return;while(this.next<this.ctx.currentTime+.16){const s=this.settings;this.updateGraph();scheduleBar(this.ctx,this.graph,s,this.seed,this.bar,this.next);this.onBar(this.bar,s,this.next);this.next+=barSeconds(s);this.bar++;}}
- updateGraph(){if(!this.graph)return;const now=this.ctx.currentTime,g=this.graph,s=this.settings,echo=delayParameters(s);for(const [param,val]of [[g.filter.frequency,11000-s.warmth*8000],[g.wet.gain,s.reverb*.5],[g.delayMix.gain,echo.mix],[g.feedback.gain,echo.feedback],[g.delay.delayTime,echo.time],[g.master.gain,this.muted?0:s.volume*.8]])param.setTargetAtTime(val,now,.2);}
+ updateGraph(){if(!this.graph)return;const now=this.ctx.currentTime,g=this.graph,s=this.settings,echo=delayParameters(s);for(const [param,val]of [[g.filter.frequency,11000-s.warmth*8000],[g.wet.gain,s.reverb*.5],[g.delayMix.gain,echo.mix],[g.feedback.gain,echo.feedback],[g.delay.delayTime,echo.time],[g.chorusMix.gain,clamp(s.chorus||0,0,1)*.28],[g.master.gain,this.muted?0:s.volume*.8]])param.setTargetAtTime(val,now,.2);}
  set(s){this.settings=structuredClone(s);this.updateGraph();}
  reseed(seed){this.seed=seed;}
  mute(m){this.muted=m;this.updateGraph();}

@@ -1,4 +1,4 @@
-export const VERSION = '2.0.0';
+export const VERSION = '2.1.0';
 export const PASSAGES = 8;
 export const PASSAGE_SECONDS = 75;
 export const WORLD = {w:1600,h:1100};
@@ -50,11 +50,11 @@ export const UNLOCKS = [
  ...REGIONS.flatMap(r=>[u(r.gift,INSTRUMENTS[r.gift.split(':')[1]].name,'Instrument',r.description),u('genre:'+r.id,r.genre+' palette','Genre','Revisit this region’s sound in the studio.')])
 ];
 export const BASE_UNLOCKS = ['track:drums','track:chords','instrument:felt','instrument:round','instrument:air','key:A','scale:minor','genre:moss'];
-export const DEFAULT_MUSIC = {genre:0,bpm:76,key:'A',scale:'minor',meter:'4/4',swing:.08,reverb:.22,delay:0,warmth:.38,density:.62,volume:.65,layers:{drums:true,chords:true,bass:true,melody:true,pad:true,arp:false},instruments:{chords:'felt',bass:'round',melody:'felt',pad:'air',arp:'felt'},levels:{drums:.72,chords:.75,bass:.65,melody:.60,pad:.48,arp:.38}};
+export const DEFAULT_MUSIC = {genre:0,bpm:76,key:'A',scale:'minor',meter:'4/4',swing:.08,reverb:.22,delay:0,warmth:.38,density:.62,bloom:0,chorus:0,volume:.65,layers:{drums:true,chords:true,bass:true,melody:true,pad:true,arp:false},instruments:{chords:'felt',bass:'round',melody:'felt',pad:'air',arp:'felt'},levels:{drums:.72,chords:.75,bass:.65,melody:.60,pad:.48,arp:.38}};
 export function seeded(seed){let a=seed>>>0;return()=>{a+=0x6D2B79F5;let t=a;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/4294967296;};}
 export function clamp(v,a,b){return Number.isFinite(v)?Math.max(a,Math.min(b,v)):a;}
 export function newSeed(){return globalThis.crypto?.getRandomValues ? globalThis.crypto.getRandomValues(new Uint32Array(1))[0] : (Date.now()^Math.floor(Math.random()*1e9))>>>0;}
-export function safeMusic(input={},unlocks=BASE_UNLOCKS,free=false){
+export function safeMusic(input={},unlocks=BASE_UNLOCKS,free=false,steadyCleared=false){
  input=input&&typeof input==='object'?input:{};const owned=new Set(unlocks);const s=structuredClone(DEFAULT_MUSIC);const allowed=id=>free||owned.has(id);
  s.genre=clamp(Number(input.genre)||0,0,5)|0;
  if(!allowed('genre:'+REGIONS[s.genre].id))s.genre=0;
@@ -63,6 +63,8 @@ export function safeMusic(input={},unlocks=BASE_UNLOCKS,free=false){
  s.scale=SCALES[input.scale]&&(input.scale==='minor'||allowed('scale:'+input.scale))?input.scale:'minor';
  s.meter=METERS[input.meter]&&(input.meter==='4/4'||allowed('meter:'+input.meter))?input.meter:'4/4';
  for(const k of ['swing','reverb','delay','warmth','density']) if(allowed('effect:'+k))s[k]=clamp(Number(input[k]??s[k]),0,k==='swing'?.28:k==='delay'?.45:1);
+ // Completing the regular collection never grants the Steady studio rewards.
+ for(const k of ['bloom','chorus'])s[k]=steadyCleared===true?clamp(Number(input[k]??0),0,1):0;
  s.volume=clamp(Number(input.volume??s.volume),0,1);
  for(const k of LAYERS){s.layers[k]=allowed('track:'+k)&&input.layers?.[k]!==false;s.levels[k]=clamp(Number(input.levels?.[k]??s.levels[k]),0,1);}
  for(const k of ['chords','bass','melody','pad','arp']){const inst=input.instruments?.[k];if(INSTRUMENTS[inst]&&allowed('instrument:'+inst))s.instruments[k]=inst;}

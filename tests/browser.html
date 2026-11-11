@@ -7,11 +7,12 @@
 <button data-fixture="rune">Unclaimed Waychime</button>
 <button data-fixture="retune">Retune an existing Waychime</button>
 <button data-fixture="complete">Completed studio</button>
+<button data-fixture="steady">Steady-completed studio</button>
 <button id="phone">Phone cabin preview</button>
 <a href="./audio-effects.html">Audio checks</a><div id="phoneFrame"></div>
 <script type="module">
-import {DEFAULT_MUSIC,BASE_UNLOCKS,UNLOCKS,REGIONS,safeMusic} from './js/data.js?v=2.0.0';
-import {readArchive,writeArchive,clearRun,writeRun} from './js/save.js?v=2.0.0';
+import {DEFAULT_MUSIC,BASE_UNLOCKS,UNLOCKS,REGIONS,safeMusic} from './js/data.js?v=2.1.0';
+import {readArchive,writeArchive,clearRun,writeRun} from './js/save.js?v=2.1.0';
 const all=[...new Set([...BASE_UNLOCKS,...UNLOCKS.map(u=>u.id)])];
 function fixture(type,navigate=true){
  const a=readArchive({getItem:()=>null});clearRun();
@@ -20,11 +21,12 @@ function fixture(type,navigate=true){
   a.music=safeMusic({...structuredClone(DEFAULT_MUSIC),genre:1,bpm:88,key:'D',scale:'dorian',delay:.3},all);
   a.studioSeed=11092026;
  }
- if(type==='complete'){a.cleared=true;a.bosses=REGIONS.map(r=>r.id);}
+ if(type==='complete'||type==='steady'){a.cleared=true;a.bosses=REGIONS.map(r=>r.id);}
+ if(type==='steady'){a.steadyCleared=true;a.music=safeMusic({...a.music,bloom:.6,chorus:.5},all,true,true);}
  writeArchive(a);
  if(type==='rune'||type==='retune')writeRun({version:2,seed:8732,musicSeed:101,weapon:'bow',difficulty:'gentle',area:0,passage:3,elapsed:240,kills:75,runes:{...a.runes},unlocks:[...BASE_UNLOCKS,'track:bass'],music:safeMusic(DEFAULT_MUSIC,[...BASE_UNLOCKS,'track:bass']),pendingRune:'moss-3',health:90,herbs:3});
  if(navigate)location.href='./qa-game.html';
 }
  document.querySelectorAll('[data-fixture]').forEach(b=>b.onclick=()=>fixture(b.dataset.fixture));
- document.getElementById('phone').onclick=()=>{fixture('collected',false);document.getElementById('phoneFrame').innerHTML='<iframe title="Phone cabin preview" src="./"></iframe>';};
+ document.getElementById('phone').onclick=()=>{fixture('steady',false);document.getElementById('phoneFrame').innerHTML='<iframe title="Phone cabin preview" src="./"></iframe>';};
 </script></html>

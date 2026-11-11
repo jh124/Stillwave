@@ -42,7 +42,9 @@ Discoveries are added to two places: this journey’s musical palette and your p
 
 The start and end of the journey are the same place: a warm illustrated cabin, with the traveler seated at a table between a pair of speakers and a mixing desk. Hover or keyboard-focus the mixer to open music settings; hover or focus the door to choose a weapon, choose a difficulty, or resume a saved journey. Touch layouts also provide explicit Mixer and Play buttons. The studio is available from the beginning and grows as you discover sounds.
 
-Complete the six guardians and enter the final gateway to return home with the **complete studio unlocked**. Every genre, instrument, track, key, meter, tempo control, and effect becomes available. Change track levels and arrangement density, or request a new melody for another seeded composition. There is no song download or export screen.
+Complete the six guardians and enter the final gateway to return home with the **regular studio palette unlocked**. Every genre, instrument, track, key, meter, tempo control, and effect becomes available. Change track levels and arrangement density, or request a new melody for another seeded composition. Two additional, permanent studio music features are exclusive to finishing **Steady**. Until a Steady clear, the bottom of the mixer shows a generic locked section; it does not display the rewards’ names or controls. Finishing Gentle, collecting every regular sound, or selecting Steady does not unlock them. Once earned, their settings save with the cabin mix, independently of fresh journeys. Existing saves retain their progress; old completion records do not identify the difficulty of the winning run, so they leave the new rewards locked. There is no song download or export screen.
+
+![The spoiler-free Steady reward section](assets/steady-rewards.webp)
 
 The cabin remembers its own genre, arrangement seed, instruments, and effects independently of the active journey. During a journey, its world sets the genre and regional chord tone; other controls become available as echo bearers are defeated. Desktop gameplay has no echo map, so exploration relies on the world itself. The compact map remains on small touch screens.
 
@@ -83,7 +85,7 @@ Source layout:
 - `js/app.js`, `js/ui.js`: input, cabin/run music separation, interface, audio integration, and lifecycle.
 - `assets/worlds.webp`, `assets/cabin.webp`: original generated environments and cabin illustration.
 - `tests/game.test.mjs`: behavioral checks for progression, permanent runes, save migration, separate music palettes, difficulty curves, harmony, and combat.
-- `tests/audio-effects.html`: local-only Web Audio checks for swing, echoes, live delay changes, and unclipped output with all effects active.
+- `tests/audio-effects.html`: local-only Web Audio checks for swing, echoes, live delay changes, the two Steady rewards, and unclipped output across all genres with every effect active.
 - `tests/browser.html`, `tests/qa-controls.js`: local-only cabin, rune, retuning, death, and victory fixtures. Run `npm run qa`, serve `dist/`, and open `/qa.html`. Controls exercise real game events. Rebuild before publication to remove the fixture pages.
 
 GitHub Actions runs the tests, builds `dist/`, and publishes it to the repository’s existing GitHub Pages site on pushes to `main`. The repository name and public address are unchanged.

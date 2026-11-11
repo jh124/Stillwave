@@ -1,17 +1,17 @@
-import {BASE_UNLOCKS,DEFAULT_MUSIC,UNLOCKS,REGIONS,WAYCHIMES,safeMusic,cleanRunes,migrateBoons,normalizeUnlocks,clamp,newSeed,fieldMusic} from './data.js?v=2.0.0';
+import {BASE_UNLOCKS,DEFAULT_MUSIC,UNLOCKS,REGIONS,WAYCHIMES,safeMusic,cleanRunes,migrateBoons,normalizeUnlocks,clamp,newSeed,fieldMusic} from './data.js?v=2.1.0';
 export const SAVE_KEY='stillwave.archive.v1';
 export const RUN_KEY='stillwave.run.v1';
-const fresh=()=>({version:2,unlocks:[...BASE_UNLOCKS],runes:{},runs:0,kills:0,bosses:[],cleared:false,bestArea:0,totalSeconds:0,music:safeMusic(DEFAULT_MUSIC,BASE_UNLOCKS),studioSeed:newSeed(),volume:.65,difficulty:'gentle',reducedMotion:false,autoAim:true,muted:false});
+const fresh=()=>({version:2,unlocks:[...BASE_UNLOCKS],runes:{},runs:0,kills:0,bosses:[],cleared:false,steadyCleared:false,bestArea:0,totalSeconds:0,music:safeMusic(DEFAULT_MUSIC,BASE_UNLOCKS),studioSeed:newSeed(),volume:.65,difficulty:'gentle',reducedMotion:false,autoAim:true,muted:false});
 export function readArchive(storage=globalThis.localStorage){
  let data;try{data=JSON.parse(storage.getItem(SAVE_KEY));}catch{}const a=fresh();
  if(data&&[1,2].includes(data.version)){
   a.unlocks=normalizeUnlocks(data.unlocks);a.runes=cleanRunes(data.runes);
   a.bosses=(Array.isArray(data.bosses)?data.bosses:[]).filter(x=>REGIONS.some(r=>r.id===x));
   for(const k of ['runs','kills','bestArea','totalSeconds'])a[k]=Number.isFinite(data[k])?Math.max(0,data[k]):0;
-  a.cleared=data.cleared===true;if(a.cleared)a.unlocks=normalizeUnlocks(UNLOCKS.map(u=>u.id));
+  a.steadyCleared=data.steadyCleared===true;a.cleared=data.cleared===true||a.steadyCleared;if(a.cleared)a.unlocks=normalizeUnlocks(UNLOCKS.map(u=>u.id));
   a.difficulty=['gentle','standard'].includes(data.difficulty)?data.difficulty:'gentle';
   a.reducedMotion=data.reducedMotion===true;a.autoAim=data.autoAim!==false;a.muted=data.muted===true;
-  a.music=safeMusic(data.music,a.unlocks,a.cleared);a.volume=clamp(Number(data.volume??a.music.volume),0,1);a.music.volume=a.volume;
+  a.music=safeMusic(data.music,a.unlocks,a.cleared,a.steadyCleared);a.volume=clamp(Number(data.volume??a.music.volume),0,1);a.music.volume=a.volume;
   a.studioSeed=Number.isFinite(data.studioSeed)?data.studioSeed>>>0:a.studioSeed;
  }
  return a;
@@ -19,6 +19,11 @@ export function readArchive(storage=globalThis.localStorage){
 export function writeArchive(a,storage=globalThis.localStorage){try{storage.setItem(SAVE_KEY,JSON.stringify(a));return true;}catch{return false;}}
 export function grantUnlock(target,id){if(!id||target.unlocks.includes(id)||!UNLOCKS.some(u=>u.id===id))return null;target.unlocks.push(id);return UNLOCKS.find(u=>u.id===id);}
 export function grantNext(target){const next=UNLOCKS.find(u=>!target.unlocks.includes(u.id)&&u.kind!=='Genre'&&!REGIONS.some(r=>r.gift===u.id));return next?grantUnlock(target,next.id):null;}
+export function completeJourney(archive,difficulty){
+ const firstSteady=difficulty==='standard'&&!archive.steadyCleared;
+ archive.cleared=true;if(difficulty==='standard')archive.steadyCleared=true;
+ UNLOCKS.forEach(u=>grantUnlock(archive,u.id));return firstSteady;
+}
 export function readRun(storage=globalThis.localStorage){
  try{const r=JSON.parse(storage.getItem(RUN_KEY));
   if(!r||![1,2].includes(r.version)||!Number.isInteger(r.area)||r.area<0||r.area>=6||!Number.isInteger(r.passage)||r.passage<0||r.passage>8||!Number.isFinite(r.seed)||!['sword','bow'].includes(r.weapon))return null;
