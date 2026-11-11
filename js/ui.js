@@ -5,7 +5,6 @@ export const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>'
 export const formatTime=s=>`${Math.floor(s/60).toString().padStart(2,'0')}:${Math.floor(s%60).toString().padStart(2,'0')}`;
 export const closeMarkup='<button class="modal-close" id="modalClose" aria-label="Close dialog">×</button>';
 export function header(kicker,title,desc=''){return `<div class="modal-header"><p class="eyebrow">${kicker}</p><h2>${title}</h2>${desc?`<p class="modal-description">${desc}</p>`:''}</div>`;}
-const runePaths=['M8 3v18m0-15 8 5-8 5','M12 3v18M4 8l8-5 8 5m-16 8 8 5 8-5','M6 3l12 18m0-18L6 21m6-18v18','M5 5h14L5 19h14M12 3v18','M4 12l8-9 8 9-8 9zM12 6v12','M7 3v18m10-18v18M7 7l10 10M7 17 17 7','M12 3v18m-7-7 7 7 7-7M5 8l7-5 7 5','M4 5l8 7-8 7m16-14-8 7 8 7','M5 6h14M5 18h14M12 3v18m-5-9h10','M6 3v18l12-6-12-6 12-6v18','M12 3 4 16h16L12 3v18','M12 3v18M4 7l16 10M4 17 20 7'];
-export function runeGlyph(index=0){return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${runePaths[index%12]}"/></svg>`;}
+export function runeGlyph(){return '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2 22 12 12 22 2 12Z"/></svg>';}
 const paths={'↗':'M3 13 13 3M3 3h10v10','→':'M2 8h12M9 3l5 5-5 5','↻':'M13 6a5.5 5.5 0 1 0 .1 5M13 2v4H9'};
 export function decorateIcons(root=document){root.querySelectorAll('span').forEach(el=>{const path=paths[el.textContent.trim()];if(path)el.innerHTML=`<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${path}"/></svg>`;});}

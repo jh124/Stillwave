@@ -1,4 +1,4 @@
-export const VERSION = '2.1.0';
+export const VERSION = '2.1.1';
 export const PASSAGES = 8;
 export const PASSAGE_SECONDS = 75;
 export const WORLD = {w:1600,h:1100};
@@ -75,10 +75,10 @@ export function scaleNote(root,scale,degree){const notes=SCALES[scale]||SCALES.m
 export function campaignMinimumSeconds(){return REGIONS.length*PASSAGES*PASSAGE_SECONDS;}
 
 export const BLESSINGS = {
- edge:{name:'Keen song',icon:'edge',desc:'13% more weapon damage.',short:'+13% damage'},
- heart:{name:'Hearthsong',icon:'heart',desc:'18 more maximum health.',short:'+18 health'},
- wind:{name:'Wandering air',icon:'wind',desc:'5.5% faster footsteps.',short:'+5.5% movement'},
- flow:{name:'Quick refrain',icon:'flow',desc:'7% faster attack recovery, up to 45%.',short:'7% faster attacks'}
+ edge:{label:'Damage',color:'#f2a197',name:'Keen song',icon:'edge',desc:'13% more weapon damage.',short:'+13% damage'},
+ heart:{label:'Health',color:'#9cdbad',name:'Hearthsong',icon:'heart',desc:'18 more maximum health.',short:'+18 health'},
+ wind:{label:'Move',color:'#93c7ee',name:'Wandering air',icon:'wind',desc:'5.5% faster footsteps.',short:'+5.5% movement'},
+ flow:{label:'Atk speed',color:'#edce83',name:'Quick refrain',icon:'flow',desc:'7% faster attack recovery, up to 45%.',short:'7% faster attacks'}
 };
 const chimeNames=['Lanternfall','Mossbound','Neonwake','Nightglass','Bitbloom','Oldspark','Tideglass','Sunwoven','Cloudsong','Hushbell','Dawnthread','Firstlight'];
 export const WAYCHIMES=REGIONS.flatMap((region,area)=>[3,6].map((passage,stop)=>({id:`${region.id}-${passage}`,name:chimeNames[area*2+stop],area,passage,index:area*2+stop,color:region.accent})));

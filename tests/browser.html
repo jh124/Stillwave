@@ -8,11 +8,12 @@
 <button data-fixture="retune">Retune an existing Waychime</button>
 <button data-fixture="complete">Completed studio</button>
 <button data-fixture="steady">Steady-completed studio</button>
+<button data-fixture="diamonds">Colored Waychime collection</button>
 <button id="phone">Phone cabin preview</button>
 <a href="./audio-effects.html">Audio checks</a><div id="phoneFrame"></div>
 <script type="module">
-import {DEFAULT_MUSIC,BASE_UNLOCKS,UNLOCKS,REGIONS,safeMusic} from './js/data.js?v=2.1.0';
-import {readArchive,writeArchive,clearRun,writeRun} from './js/save.js?v=2.1.0';
+import {DEFAULT_MUSIC,BASE_UNLOCKS,UNLOCKS,REGIONS,safeMusic} from './js/data.js?v=2.1.1';
+import {readArchive,writeArchive,clearRun,writeRun} from './js/save.js?v=2.1.1';
 const all=[...new Set([...BASE_UNLOCKS,...UNLOCKS.map(u=>u.id)])];
 function fixture(type,navigate=true){
  const a=readArchive({getItem:()=>null});clearRun();
@@ -21,6 +22,7 @@ function fixture(type,navigate=true){
   a.music=safeMusic({...structuredClone(DEFAULT_MUSIC),genre:1,bpm:88,key:'D',scale:'dorian',delay:.3},all);
   a.studioSeed=11092026;
  }
+ if(type==='diamonds')a.runes={'moss-3':'edge','moss-6':'heart','neon-3':'wind','neon-6':'flow','pixel-3':'edge','pixel-6':'edge','tide-3':'heart','tide-6':'flow'};
  if(type==='complete'||type==='steady'){a.cleared=true;a.bosses=REGIONS.map(r=>r.id);}
  if(type==='steady'){a.steadyCleared=true;a.music=safeMusic({...a.music,bloom:.6,chorus:.5},all,true,true);}
  writeArchive(a);
@@ -28,5 +30,5 @@ function fixture(type,navigate=true){
  if(navigate)location.href='./qa-game.html';
 }
  document.querySelectorAll('[data-fixture]').forEach(b=>b.onclick=()=>fixture(b.dataset.fixture));
- document.getElementById('phone').onclick=()=>{fixture('steady',false);document.getElementById('phoneFrame').innerHTML='<iframe title="Phone cabin preview" src="./"></iframe>';};
+ document.getElementById('phone').onclick=()=>{fixture('diamonds',false);document.getElementById('phoneFrame').innerHTML='<iframe title="Phone cabin preview" src="./"></iframe>';};
 </script></html>
