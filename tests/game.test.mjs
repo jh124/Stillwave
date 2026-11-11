@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {Journey} from '../js/engine.js';
+import {Journey,placeEchoShrines} from '../js/engine.js';
 import {REGIONS,UNLOCKS,BASE_UNLOCKS,DEFAULT_MUSIC,LAYERS,METERS,SCALES,KEYS,WEAPONS,seeded,safeMusic,campaignMinimumSeconds,PASSAGE_SECONDS} from '../js/data.js';
 import {composeBar,barSeconds,encodeWav} from '../js/music.js';
 import {readArchive,writeArchive,grantNext,grantUnlock,readRun,writeRun,clearRun} from '../js/save.js';
@@ -26,3 +26,28 @@ test('WAV is interleaved stereo PCM, not a mislabeled recording',()=>{const wav=
 test('every selectable instrument actually reaches its selected track',()=>{for(const layer of ['chords','bass','melody','pad','arp']){const s=safeMusic({...DEFAULT_MUSIC,density:1,instruments:{...DEFAULT_MUSIC.instruments,[layer]:'guitar'},layers:Object.fromEntries(LAYERS.map(l=>[l,true]))},all,true);const events=composeBar(s,82,0).filter(e=>e.layer===layer);assert.ok(events.length>0,layer);assert.ok(events.every(e=>e.instrument==='guitar'),layer);}});
 test('corrupt local saves fall back to a usable archive and run',()=>{const storage=memory();storage.setItem('stillwave.archive.v1','{bad');assert.deepEqual(readArchive(storage).unlocks,BASE_UNLOCKS);storage.setItem('stillwave.run.v1',JSON.stringify({version:1,seed:42,weapon:'bow',area:0,passage:0,health:null,herbs:-8,boons:['evil','heart'],elapsed:null}));const r=readRun(storage);assert.equal(r.health,110);assert.equal(r.herbs,0);assert.deepEqual(r.boons,['heart']);assert.ok(Number.isFinite(r.elapsed));const s=safeMusic({bpm:'invalid',levels:{chords:'bad'},volume:'bad'},all,true);assert.ok(Number.isFinite(s.volume));assert.ok(Number.isFinite(s.levels.chords));});
 test('all four special enemy patterns appear and seeded shrines change by passage',()=>{const types=new Set();let first;for(let passage=1;passage<8;passage+=2){const g=new Journey({seed:142,passage});g.enemies=[];g.wave=3;g.spawnWave();types.add(g.enemies.find(e=>e.special).variant);if(first)assert.notDeepEqual(g.shrines,first);first=g.shrines;}assert.equal(types.size,4);});
+test('swing moves the offbeat hats and melody notes heard in a normal arrangement',()=>{
+ const straight=safeMusic({...DEFAULT_MUSIC,swing:0,density:1},all,true),swung={...straight,swing:.28},beat=60/straight.bpm;
+ const a=composeBar(straight,838,0),b=composeBar(swung,838,0);
+ const offA=a.find(e=>e.layer==='drums'&&e.note==='hat'&&Math.abs(e.t-beat*.5)<1e-8);
+ assert.ok(offA,'the fixture includes an offbeat eighth-note hat');
+ assert.ok(b.some(e=>e.layer==='drums'&&e.note==='hat'&&Math.abs(e.t-beat*2/3)<1e-8));
+ assert.ok(b.some(e=>e.layer==='drums'&&e.note==='kick'&&e.t===0),'downbeat stays anchored');
+ const leadA=a.filter(e=>e.layer==='melody'),leadB=b.filter(e=>e.layer==='melody');assert.equal(leadA.length,leadB.length);assert.ok(leadA.some((e,i)=>Math.abs(e.t-leadB[i].t)>beat*.1));
+});
+test('swing keeps downbeats and every event inside its original bar for all meters and tempos',()=>{
+ for(const meter of Object.keys(METERS))for(let bpm=60;bpm<=96;bpm++){const a=safeMusic({...DEFAULT_MUSIC,meter,bpm,swing:0,density:1},all,true),b={...a,swing:.28};for(let bar=0;bar<3;bar++){const events=composeBar(b,800+bar,bar);assert.ok(events.every(e=>e.t>=0&&e.t<barSeconds(b)));const firstKick=events.find(e=>e.layer==='drums'&&e.note==='kick');assert.equal(firstKick.t,0);}}
+});
+test('shrine layouts stay reachable, separated, and away from arrival and exit across runs',()=>{
+ for(let seed=0;seed<240;seed++){const g=new Journey({seed,area:seed%6,passage:seed%8});assert.equal(g.shrines.length,3);for(const s of g.shrines){assert.ok(s.x>=160&&s.x<=1440);assert.ok(s.y>=200&&s.y<=950);assert.ok(Math.hypot(s.x-g.player.x,s.y-g.player.y)>=210);assert.ok(Math.hypot(s.x-800,s.y-170)>=175);}for(let i=0;i<3;i++)for(let j=i+1;j<3;j++)assert.ok(Math.hypot(g.shrines[i].x-g.shrines[j].x,g.shrines[i].y-g.shrines[j].y)>=330);assert.deepEqual(g.shrines,new Journey({seed,area:seed%6,passage:seed%8}).shrines);}
+});
+test('each shrine can appear on either side and at either end of the map',()=>{
+ const layouts=Array.from({length:96},(_,seed)=>new Journey({seed}).shrines);
+ assert.equal(new Set(layouts.map(s=>JSON.stringify(s))).size,layouts.length);
+ for(let i=0;i<3;i++){const xs=layouts.map(s=>s[i].x),ys=layouts.map(s=>s[i].y);assert.ok(Math.min(...xs)<500);assert.ok(Math.max(...xs)>1100);assert.ok(Math.min(...ys)<350);assert.ok(Math.max(...ys)>800);}
+});
+test('bow projectiles reach nearby targets but cannot hit beyond their shortened reach',()=>{
+ for(const [range,hit]of [[500,true],[640,false]]){const g=new Journey({seed:22,weapon:'bow'});g.player.x=500;g.player.y=550;g.enemies=[];g.wave=6;const e=g.spawnEnemy('snail',false,g.player.x+range,g.player.y);e.boss=true;e.speed=0;e.cooldown=1e6;e.spawn=0;e.hp=e.maxHp=1000;g.attack({autoAim:true});for(let i=0;i<110;i++)g.update(.01,{});assert.equal(e.hp<e.maxHp,hit);}
+});
+
+test('shrine placement has a bounded fallback for a repeated random value',()=>{const shrines=placeEchoShrines(()=>0,{x:800,y:748});assert.equal(shrines.length,3);assert.equal(new Set(shrines.map(s=>s.x+','+s.y)).size,3);});

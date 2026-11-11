@@ -1,5 +1,13 @@
 import {WORLD,REGIONS,WEAPONS,PASSAGES,PASSAGE_SECONDS,seeded,newSeed,clamp} from './data.js';
 const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+export function placeEchoShrines(rng,spawn){
+ const shrines=[],exit={x:WORLD.w*.5,y:170};
+ const add=p=>{if(distance(p,spawn)<210||distance(p,exit)<175||shrines.some(s=>distance(p,s)<330))return;shrines.push({...p,active:false});};
+ for(let i=0;i<96&&shrines.length<3;i++)add({x:WORLD.w*(.13+rng()*.74),y:WORLD.h*(.20+rng()*.65)});
+ // Bounded fallback also handles a degenerate random source without hanging.
+ for(const [x,y]of [[.18,.25],[.82,.25],[.18,.80],[.82,.80],[.5,.34]]){if(shrines.length===3)break;add({x:x*WORLD.w,y:y*WORLD.h});}
+ return shrines;
+}
 export class Journey{
  constructor({seed=newSeed(),weapon='sword',difficulty='standard',area=0,passage=0,elapsed=0,kills=0,boons=[],health=110,herbs=3,onEvent=()=>{}}={}){
   Object.assign(this,{seed,weapon,difficulty,area,passage,elapsed,kills,boons,onEvent});this.rng=seeded(seed);this.state='playing';this.player={x:WORLD.w/2,y:WORLD.h/2,r:17,hp:health,maxHp:110,invincible:1.5,attack:0,dash:0,dashTime:0,dx:1,dy:0,facing:0,combo:0,herbs:clamp(herbs,0,4)};this.rebuildStats();this.enterRoom();
@@ -9,7 +17,7 @@ export class Journey{
   const r=seeded((this.seed+this.area*10007+this.passage*1031)>>>0);this.roomRng=r;this.roomTime=0;this.wave=0;this.enemies=[];this.projectiles=[];this.telegraphs=[];this.effects=[];this.pickups=[];this.attackArcs=[];this.portal=false;this.echoes=0;this.roomKills=0;this.roomDamage=0;this.guardianDefeated=false;this.player.x=WORLD.w/2;this.player.y=WORLD.h*.68;this.player.invincible=2;
   this.isBoss=this.passage===PASSAGES;this.obstacles=[];this.decor=[];
   for(let i=0;i<48;i++){const x=100+r()*(WORLD.w-200),y=90+r()*(WORLD.h-180);if(Math.hypot(x-WORLD.w/2,y-WORLD.h*.68)<100)continue;const edge=x<260||x>WORLD.w-260||y<200||y>WORLD.h-160;this.decor.push({x,y,kind:Math.floor(r()*6),scale:.7+r()*.6,phase:r()*6.28,edge});}
-  this.shrines=this.isBoss?[]:[{x:WORLD.w*(.22+r()*.12),y:WORLD.h*(.31+r()*.13),active:false},{x:WORLD.w*(.66+r()*.12),y:WORLD.h*(.31+r()*.13),active:false},{x:WORLD.w*(.40+r()*.2),y:WORLD.h*(.70+r()*.12),active:false}];
+  this.shrines=this.isBoss?[]:placeEchoShrines(r,this.player);
   this.roomFlavor=this.isBoss?'guardian':['Lantern walk','Wildflower drift','Quiet crossing','A slower current','Silver branches','The listening path','A little clearing','Echoes at dusk'][(this.passage+this.area*3)%8];
   this.roomModifier=this.isBoss?'none':['none','bloom','breeze'][Math.floor(r()*3)];
   this.onEvent({type:'room',area:this.area,passage:this.passage,boss:this.isBoss});

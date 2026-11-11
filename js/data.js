@@ -1,4 +1,4 @@
-export const VERSION = '1.0.0';
+export const VERSION = '1.0.1';
 export const PASSAGES = 8;
 export const PASSAGE_SECONDS = 75;
 export const WORLD = {w:1600,h:1100};
@@ -12,7 +12,7 @@ export const REGIONS = [
 ];
 export const WEAPONS = {
   sword:{name:'Moonblade',type:'Sword',damage:36,cooldown:.62,range:120,desc:'A wide, forgiving arc. Higher damage, close to the music.',perk:'Cleave nearby foes · every third hit restores 1 health'},
-  bow:{name:'Willowbow',type:'Bow & arrow',damage:24,cooldown:.48,range:620,desc:'A light, steady rhythm. Make a little room for yourself.',perk:'Long range · arrows pierce one extra foe'}
+  bow:{name:'Willowbow',type:'Bow & arrow',damage:22,cooldown:.48,range:580,desc:'A light, steady rhythm. Make a little room for yourself.',perk:'Long range · arrows pierce one extra foe'}
 };
 export const SCALES = {minor:[0,2,3,5,7,8,10],major:[0,2,4,5,7,9,11],dorian:[0,2,3,5,7,9,10],pentatonic:[0,3,5,7,10]};
 export const KEYS = {'A':57,'C':60,'D':62,'E':52,'F':53,'G':55};

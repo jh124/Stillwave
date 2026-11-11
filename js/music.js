@@ -1,13 +1,20 @@
 import {REGIONS,KEYS,METERS,seeded,scaleNote,progression,clamp} from './data.js';
 export function beatSeconds(s){return 60/clamp(s.bpm,60,96)*(s.meter==='6/8'?.5:1);}
 export function barSeconds(s){return beatSeconds(s)*METERS[s.meter];}
+export function grooveTime(time,s){
+ const beat=beatSeconds(s),phase=(time/beat)%1;
+ // Delay the second eighth of each beat, including its subdivisions.
+ // At maximum swing the eighths form a relaxed 2:1 shuffle.
+ return time+(phase>=.5-1e-8&&phase<1-1e-8?beat*(clamp(s.swing||0,0,.28)/.28)/6:0);
+}
+export function delayParameters(s){const amount=clamp(s.delay||0,0,.45)/.45;return {time:beatSeconds(s)*.75,mix:amount*.60,feedback:.20+amount*.32};}
 export function composeBar(s,seed,bar){
  const rng=seeded((seed+Math.floor(bar/4)*6719)>>>0),detail=seeded((seed+bar*7919)>>>0);
  const beats=METERS[s.meter]||4,beat=beatSeconds(s),step=beat/4,steps=beats*4,root=KEYS[s.key]||57,deg=progression(s.scale,bar,seed),events=[];
  const density=s.density??.62,genre=s.genre|0;
- const push=(layer,t,n,d,v=.5,inst)=>{if(s.layers[layer])events.push({layer,t:Math.max(0,t),note:n,duration:d,velocity:v*(s.levels[layer]??.6),instrument:inst||s.instruments[layer]});};
+ const push=(layer,t,n,d,v=.5,inst)=>{if(s.layers[layer])events.push({layer,t:grooveTime(Math.max(0,t),s),note:n,duration:d,velocity:v*(s.levels[layer]??.6),instrument:inst||s.instruments[layer]});};
  const chord=[deg,deg+2,deg+4,...(genre===0||genre===3||genre===4?[deg+6]:[])],inversion=Math.floor(rng()*3);
- const groove=i=>i*step+(i%2?step*(s.swing||0):0);
+ const groove=i=>i*step;
  if(s.layers.chords){const times=genre===3?[0,beat*1.5,beat*2.5].filter(t=>t<beat*beats):[0];for(const t of times)chord.forEach((n,i)=>push('chords',t+i*.008,scaleNote(root,s.scale,n)+(i<inversion?12:0),genre===3?beat*.9:beat*beats*.86,.27+detail()*.06));}
  if(s.layers.pad)for(const n of [deg,deg+4,deg+9])push('pad',0,scaleNote(root-12,s.scale,n),beat*beats*1.1,.19);
  if(s.layers.bass){for(let b=0;b<beats;b++){if(b===0||b===Math.floor(beats/2)||(genre===3&&b===beats-1))push('bass',b*beat,scaleNote(root-24,s.scale,deg+(b===beats-1?4:0)),beat*(genre===4?1.6:.8),.62);}}
@@ -26,14 +33,14 @@ export function composeBar(s,seed,bar){
 }
 function noise(ctx){const b=ctx.createBuffer(1,ctx.sampleRate,ctx.sampleRate),d=b.getChannelData(0),rng=seeded(801);for(let i=0;i<d.length;i++)d[i]=rng()*2-1;return b;}
 function impulse(ctx){const len=Math.floor(ctx.sampleRate*2.7),b=ctx.createBuffer(2,len,ctx.sampleRate),rng=seeded(91);for(let c=0;c<2;c++){let last=0;const d=b.getChannelData(c);for(let i=0;i<len;i++){last=last*.45+(rng()*2-1)*.55;d[i]=last*Math.pow(1-i/len,3);}}return b;}
-function chain(ctx,s,destination){
+export function createMusicGraph(ctx,s,destination){
  const input=ctx.createGain(),filter=ctx.createBiquadFilter();filter.type='lowpass';filter.frequency.value=11000-(s.warmth||0)*8000;filter.Q.value=.45;
  const dry=ctx.createGain();dry.gain.value=.84;const convolver=ctx.createConvolver();convolver.buffer=impulse(ctx);const wet=ctx.createGain();wet.gain.value=(s.reverb||0)*.50;
- const delay=ctx.createDelay(2),feedback=ctx.createGain(),delayMix=ctx.createGain();delay.delayTime.value=beatSeconds(s)*.75;feedback.gain.value=.23;delayMix.gain.value=(s.delay||0)*.5;
+ const echo=delayParameters(s),delay=ctx.createDelay(2),feedback=ctx.createGain(),delayMix=ctx.createGain(),echoLow=ctx.createBiquadFilter(),echoHigh=ctx.createBiquadFilter();delay.delayTime.value=echo.time;feedback.gain.value=echo.feedback;delayMix.gain.value=echo.mix;echoLow.type='lowpass';echoLow.frequency.value=3000;echoLow.Q.value=.4;echoHigh.type='highpass';echoHigh.frequency.value=160;echoHigh.Q.value=.4;
  const compressor=ctx.createDynamicsCompressor();compressor.threshold.value=-20;compressor.knee.value=20;compressor.ratio.value=3.2;compressor.attack.value=.012;compressor.release.value=.3;
  const master=ctx.createGain();master.gain.value=(s.volume??.65)*.8;
- input.connect(filter);filter.connect(dry);dry.connect(compressor);filter.connect(convolver);convolver.connect(wet);wet.connect(compressor);filter.connect(delay);delay.connect(feedback);feedback.connect(delay);delay.connect(delayMix);delayMix.connect(compressor);compressor.connect(master);master.connect(destination);
- return {input,filter,wet,delay,delayMix,master,noise:noise(ctx)};
+ input.connect(filter);filter.connect(dry);dry.connect(compressor);filter.connect(convolver);convolver.connect(wet);wet.connect(compressor);filter.connect(delay);delay.connect(echoLow);echoLow.connect(echoHigh);echoHigh.connect(feedback);feedback.connect(delay);echoHigh.connect(delayMix);delayMix.connect(compressor);compressor.connect(master);master.connect(destination);
+ return {input,filter,wet,delay,feedback,delayMix,master,noise:noise(ctx)};
 }
 function percussion(ctx,out,e,t,buf){
  const gain=ctx.createGain();gain.connect(out);const v=e.velocity;
@@ -52,14 +59,14 @@ export function scheduleBar(ctx,graph,s,seed,bar,start,limit=Infinity){for(const
 export function encodeWav(channels,sampleRate){const length=channels[0].length,buffer=new ArrayBuffer(44+length*channels.length*2),v=new DataView(buffer);const text=(off,s)=>{for(let i=0;i<s.length;i++)v.setUint8(off+i,s.charCodeAt(i));};text(0,'RIFF');v.setUint32(4,buffer.byteLength-8,true);text(8,'WAVE');text(12,'fmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,channels.length,true);v.setUint32(24,sampleRate,true);v.setUint32(28,sampleRate*channels.length*2,true);v.setUint16(32,channels.length*2,true);v.setUint16(34,16,true);text(36,'data');v.setUint32(40,length*channels.length*2,true);let off=44;for(let i=0;i<length;i++)for(let c=0;c<channels.length;c++){const sample=clamp(channels[c][i],-1,1);v.setInt16(off,Math.round(sample*(sample<0?32768:32767)),true);off+=2;}return buffer;}
 export class MusicEngine{
  constructor(settings,seed){this.settings=structuredClone(settings);this.seed=seed;this.ctx=null;this.bar=0;this.next=0;this.muted=false;this.onBar=()=>{};}
- async start(){if(!this.ctx){const C=globalThis.AudioContext||globalThis.webkitAudioContext;if(!C)throw new Error('This browser does not support Web Audio.');this.ctx=new C();this.graph=chain(this.ctx,this.settings,this.ctx.destination);}await this.ctx.resume();if(!this.timer){this.next=this.ctx.currentTime+.08;this.tick();this.timer=setInterval(()=>this.tick(),40);}}
+ async start(){if(!this.ctx){const C=globalThis.AudioContext||globalThis.webkitAudioContext;if(!C)throw new Error('This browser does not support Web Audio.');this.ctx=new C();this.graph=createMusicGraph(this.ctx,this.settings,this.ctx.destination);}await this.ctx.resume();if(!this.timer){this.next=this.ctx.currentTime+.08;this.tick();this.timer=setInterval(()=>this.tick(),40);}}
  tick(){if(!this.ctx||this.ctx.state!=='running')return;while(this.next<this.ctx.currentTime+.16){const s=this.settings;this.updateGraph();scheduleBar(this.ctx,this.graph,s,this.seed,this.bar,this.next);this.onBar(this.bar,s,this.next);this.next+=barSeconds(s);this.bar++;}}
- updateGraph(){if(!this.graph)return;const now=this.ctx.currentTime,g=this.graph,s=this.settings;for(const [param,val]of [[g.filter.frequency,11000-s.warmth*8000],[g.wet.gain,s.reverb*.5],[g.delayMix.gain,s.delay*.5],[g.delay.delayTime,beatSeconds(s)*.75],[g.master.gain,this.muted?0:s.volume*.8]])param.setTargetAtTime(val,now,.2);}
+ updateGraph(){if(!this.graph)return;const now=this.ctx.currentTime,g=this.graph,s=this.settings,echo=delayParameters(s);for(const [param,val]of [[g.filter.frequency,11000-s.warmth*8000],[g.wet.gain,s.reverb*.5],[g.delayMix.gain,echo.mix],[g.feedback.gain,echo.feedback],[g.delay.delayTime,echo.time],[g.master.gain,this.muted?0:s.volume*.8]])param.setTargetAtTime(val,now,.2);}
  set(s){this.settings=structuredClone(s);this.updateGraph();}
  reseed(seed){this.seed=seed;}
  mute(m){this.muted=m;this.updateGraph();}
  async suspend(){if(this.ctx?.state==='running')await this.ctx.suspend();}
  async resume(){if(this.ctx){await this.ctx.resume();this.tick();}}
- async renderMinute(s=this.settings,seed=this.seed,onProgress=()=>{}){const Offline=globalThis.OfflineAudioContext||globalThis.webkitOfflineAudioContext;if(!Offline)throw new Error('Song rendering is not supported in this browser.');const rate=44100,ctx=new Offline(2,rate*60,rate),g=chain(ctx,s,ctx.destination);let t=.08,bar=0;while(t<58.5){scheduleBar(ctx,g,s,seed,bar,t,58.5);t+=barSeconds(s);bar++;}g.master.gain.setValueAtTime(0,0);g.master.gain.linearRampToValueAtTime(s.volume*.8,.45);g.master.gain.setValueAtTime(s.volume*.8,56.7);g.master.gain.linearRampToValueAtTime(0,59.9);onProgress('Rendering your arrangement…');const result=await ctx.startRendering();onProgress('Preparing your WAV…');await new Promise(r=>setTimeout(r,0));return new Blob([encodeWav([result.getChannelData(0),result.getChannelData(1)],rate)],{type:'audio/wav'});}
+ async renderMinute(s=this.settings,seed=this.seed,onProgress=()=>{}){const Offline=globalThis.OfflineAudioContext||globalThis.webkitOfflineAudioContext;if(!Offline)throw new Error('Song rendering is not supported in this browser.');const rate=44100,ctx=new Offline(2,rate*60,rate),g=createMusicGraph(ctx,s,ctx.destination);let t=.08,bar=0;while(t<58.5){scheduleBar(ctx,g,s,seed,bar,t,58.5);t+=barSeconds(s);bar++;}g.master.gain.setValueAtTime(0,0);g.master.gain.linearRampToValueAtTime(s.volume*.8,.45);g.master.gain.setValueAtTime(s.volume*.8,56.7);g.master.gain.linearRampToValueAtTime(0,59.9);onProgress('Rendering your arrangement…');const result=await ctx.startRendering();onProgress('Preparing your WAV…');await new Promise(r=>setTimeout(r,0));return new Blob([encodeWav([result.getChannelData(0),result.getChannelData(1)],rate)],{type:'audio/wav'});}
  sfx(kind){if(!this.ctx||this.muted||this.ctx.state!=='running')return;const t=this.ctx.currentTime;const notes=kind==='unlock'?[72,76,79,84]:kind==='heal'?[69,76]:kind==='hit'?[48]:kind==='dash'?[62]:[55];notes.forEach((n,i)=>tone(this.ctx,this.graph.input,{note:n,duration:kind==='unlock'?.3:.06,velocity:kind==='hit'?.045:.10,instrument:'bell',layer:'melody'},t+i*.085));}
 }
