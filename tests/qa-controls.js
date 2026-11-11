@@ -1,5 +1,5 @@
 // Development-only controls, excluded from the production build.
-import {Journey} from './js/engine.js?v=2.1.1';
+import {Journey} from './js/engine.js?v=2.2.0';
 let active;
 const enter=Journey.prototype.enterRoom;
 Journey.prototype.enterRoom=function(...args){active=this;return enter.apply(this,args);};
@@ -15,4 +15,4 @@ for(const [label,action] of [
  button.style.cssText='padding:7px;background:#cbd8b9;border-radius:4px;color:#17332a';
  button.onclick=action;panel.append(button);
 }
-document.body.append(panel);
+if(window.innerHeight>600)document.body.append(panel);

@@ -28,9 +28,7 @@ Pick one companion for a run:
 
 Attack recovery and travel time create measured base single-target rates 55.8 and 44 damage per second respectively in the 20-second stationary-target regression scenario. Both weapons receive the same Waychime upgrades. **Gentle** uses the former Steady balance without reducing damage or enemy speed. **Steady** starts slightly tougher and grows considerably harder across the journey: more enemies, higher concurrent enemy limits, and increasing health and damage. In the final world, enemies have roughly three times the Gentle health and over twice the damage. All enemy attacks have a wind-up. Drifting briefly grants invincibility.
 
-Echo shrines heal for 8, dropped hearts heal for 10, completed passages heal for 16, and mending herbs heal for 45. A guardian heals for 40, and entering a new world restores health. After passages 3 and 6 in every world, find a **Waychime**. These twelve uniquely named runes stay with you after death. Each holds one blessing: +13% weapon damage, +18 maximum health, +5.5% movement speed, or 7% faster attack recovery (capped at 45%). Every bound blessing is active from the start of a fresh journey. Revisit the same clearing to keep its blessing or replace it; each rune contributes exactly once. The on-screen rack shows all twelve as simple diamonds, with undiscovered marks greyed out. Bound diamonds use the blessing color: coral for damage, green for health, blue for movement, and gold for attack speed. Per-upgrade counts appear in the HUD, cabin rack, and collection. Open it for the named collection and blessing totals.
-
-![Waychime diamonds and upgrade counts](assets/waychimes-preview.webp)
+Echo shrines heal for 8, dropped hearts heal for 10, completed passages heal for 16, and mending herbs heal for 45. A guardian heals for 40, and entering a new world restores health. After passages 3 and 6 in every world, find a **Waychime**. These twelve uniquely named runes stay with you after death. Each holds one blessing: +13% weapon damage, +18 maximum health, +5.5% movement speed, or 7% faster attack recovery (capped at 45%). Every bound blessing is active from the start of a fresh journey. Revisit the same clearing to keep its blessing or replace it; each rune contributes exactly once. The on-screen rack shows all twelve as simple diamonds, with undiscovered marks greyed out. Bound diamonds use the blessing color: coral for damage, green for health, blue for movement, and gold for attack speed. Open it for the named collection and each rune’s blessing.
 
 ## Your musical collection
 
@@ -48,7 +46,7 @@ Complete the six guardians and enter the final gateway to return home with the *
 
 ![The spoiler-free Steady reward section](assets/steady-rewards.webp)
 
-The cabin remembers its own genre, arrangement seed, instruments, and effects independently of the active journey. During a journey, its world sets the genre and regional chord tone; other controls become available as echo bearers are defeated. Desktop gameplay has no echo map, so exploration relies on the world itself. The compact map remains on small touch screens.
+The cabin remembers its own genre, arrangement seed, instruments, and effects independently of the active journey. During a journey, its world sets the genre and regional chord tone; other controls become available as echo bearers are defeated. Desktop gameplay has no echo map, so exploration relies on the world itself. The compact map remains on small touch screens, beneath the world label.
 
 ## Controls
 
@@ -65,6 +63,16 @@ The cabin remembers its own genre, arrangement seed, instruments, and effects in
 
 Assisted aim for Space and reduced motion are configurable in Pause. Music continues while a visible pause or music panel is open, and suspends when the tab is hidden. Browsers require an initial interaction before playing sound. If your OS suspends audio, resume through the visible music controls.
 
+## Mobile play
+
+Phone play is designed for landscape, with a compact HUD and touch controls at the edges. Portrait opens a rotate prompt and pauses an active journey. On supported devices, entering through the door requests full screen and a native landscape lock. Safari may decline orientation locking; the rotate prompt enforces the landscape layout without rotating the controls artificially. Installed applications also request landscape through the web manifest.
+
+The phone mixer has Tracks, Sound, Effects, and Steady rewards pages, with the sound and return buttons always visible. Collections use pages instead of a long phone scroll. The cabin, weapon choices, pause menu, and Waychime choices use the available landscape width. The diamond rack keeps its total collection count, with no per-upgrade counts.
+
+Audio starts directly from a user gesture. Where the browser supports Audio Session, Stillwave requests music playback instead of the default ambient route. Interrupted or suspended contexts can resume from a tap; the sound button reflects actual playback state. Restart sound rebuilds an unresponsive audio context without changing your saved arrangement. Backgrounding the page suspends playback, and stale scheduled bars are discarded when returning.
+
+![The compact landscape mixer](assets/mobile-preview.jpg)
+
 ## Development
 
 No runtime packages, build dependencies, or backend are required. Node 22+ is used for the small build script and tests.
@@ -78,14 +86,15 @@ Serve `dist/` with a static web server. ES modules require HTTP; opening `index.
 
 Source layout:
 
-- `index.html`, `styles.css`: interactive cabin, game HUD, Waychime rack, dialogs, mixer, and touch controls.
+- `index.html`, `styles.css`, `mobile.css`: interactive cabin, game HUD, Waychime rack, dialogs, mixer, and touch controls.
 - `js/engine.js`: seeded world simulation, encounters, weapons, enemies, guardians, and progression.
 - `js/music.js`: composition, Web Audio synthesis, live effects, and development audio encoding.
 - `js/data.js`: worlds, musical palettes, unlocks, Waychimes, difficulty curves, weapons, and deterministic helpers.
 - `js/save.js`: validated browser archive and run persistence.
 - `js/render.js`, `js/sprites.js`: illustrated-world rendering and original vector characters.
-- `js/app.js`, `js/ui.js`: input, cabin/run music separation, interface, audio integration, and lifecycle.
+- `js/app.js`, `js/ui.js`, `js/mobile.js`: input, cabin/run music separation, interface, audio integration, mobile orientation, and lifecycle.
 - `assets/worlds.webp`, `assets/cabin.webp`: original generated environments and cabin illustration.
+- `tests/mobile.test.mjs`: audio startup, interruption recovery, playback status, scheduler recovery, and landscape guard checks.
 - `tests/game.test.mjs`: behavioral checks for progression, permanent runes, save migration, separate music palettes, difficulty curves, harmony, and combat.
 - `tests/audio-effects.html`: local-only Web Audio checks for swing, echoes, live delay changes, the two Steady rewards, and unclipped output across all genres with every effect active.
 - `tests/browser.html`, `tests/qa-controls.js`: local-only cabin, rune, retuning, death, and victory fixtures. Run `npm run qa`, serve `dist/`, and open `/qa.html`. Controls exercise real game events. Rebuild before publication to remove the fixture pages.

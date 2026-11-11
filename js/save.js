@@ -1,4 +1,4 @@
-import {BASE_UNLOCKS,DEFAULT_MUSIC,UNLOCKS,REGIONS,WAYCHIMES,safeMusic,cleanRunes,migrateBoons,normalizeUnlocks,clamp,newSeed,fieldMusic} from './data.js?v=2.1.1';
+import {BASE_UNLOCKS,DEFAULT_MUSIC,UNLOCKS,REGIONS,WAYCHIMES,safeMusic,cleanRunes,migrateBoons,normalizeUnlocks,clamp,newSeed,fieldMusic} from './data.js?v=2.2.0';
 export const SAVE_KEY='stillwave.archive.v1';
 export const RUN_KEY='stillwave.run.v1';
 const fresh=()=>({version:2,unlocks:[...BASE_UNLOCKS],runes:{},runs:0,kills:0,bosses:[],cleared:false,steadyCleared:false,bestArea:0,totalSeconds:0,music:safeMusic(DEFAULT_MUSIC,BASE_UNLOCKS),studioSeed:newSeed(),volume:.65,difficulty:'gentle',reducedMotion:false,autoAim:true,muted:false});

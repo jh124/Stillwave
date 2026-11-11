@@ -1,6 +1,6 @@
 {
   "name": "stillwave",
-  "version": "2.1.1",
+  "version": "2.2.0",
   "private": true,
   "type": "module",
   "description": "A gentle musical roguelike. Find your way. Find your sound.",

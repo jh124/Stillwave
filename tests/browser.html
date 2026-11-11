@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en"><meta charset="utf-8"><title>Stillwave · journey fixtures</title>
-<style>body{font:15px system-ui;background:#14332f;color:#e9ecd5;padding:36px;max-width:1080px;margin:auto}button,a{display:inline-block;color:#14332f;background:#c7d8b3;border:0;border-radius:6px;padding:14px 20px;margin:6px;cursor:pointer}p{line-height:1.8}iframe{display:block;width:390px;height:844px;border:1px solid #bccc9f;border-radius:10px;margin-top:24px}</style>
+<style>body{font:15px system-ui;background:#14332f;color:#e9ecd5;padding:36px;max-width:1080px;margin:auto}button,a{display:inline-block;color:#14332f;background:#c7d8b3;border:0;border-radius:6px;padding:14px 20px;margin:6px;cursor:pointer}p{line-height:1.8}iframe{display:block;width:844px;height:390px;max-width:100%;border:1px solid #bccc9f;border-radius:10px;margin-top:24px}</style>
 <h1>Stillwave · journey fixtures</h1><p>Local development page, excluded from the production build. Fixture buttons replace this origin’s test saves. Journey controls exercise the real death, rune, and victory event paths.</p>
 <button data-fixture="fresh">Fresh cabin</button>
 <button data-fixture="collected">Saved studio and two Waychimes</button>
@@ -9,11 +9,11 @@
 <button data-fixture="complete">Completed studio</button>
 <button data-fixture="steady">Steady-completed studio</button>
 <button data-fixture="diamonds">Colored Waychime collection</button>
-<button id="phone">Phone cabin preview</button>
+<button id="phone">Landscape phone preview</button><button id="rotatePreview">Rotate preview</button><button id="smallPreview">Small phone preview</button>
 <a href="./audio-effects.html">Audio checks</a><div id="phoneFrame"></div>
 <script type="module">
-import {DEFAULT_MUSIC,BASE_UNLOCKS,UNLOCKS,REGIONS,safeMusic} from './js/data.js?v=2.1.1';
-import {readArchive,writeArchive,clearRun,writeRun} from './js/save.js?v=2.1.1';
+import {DEFAULT_MUSIC,BASE_UNLOCKS,UNLOCKS,REGIONS,safeMusic} from './js/data.js?v=2.2.0';
+import {readArchive,writeArchive,clearRun,writeRun} from './js/save.js?v=2.2.0';
 const all=[...new Set([...BASE_UNLOCKS,...UNLOCKS.map(u=>u.id)])];
 function fixture(type,navigate=true){
  const a=readArchive({getItem:()=>null});clearRun();
@@ -29,6 +29,8 @@ function fixture(type,navigate=true){
  if(type==='rune'||type==='retune')writeRun({version:2,seed:8732,musicSeed:101,weapon:'bow',difficulty:'gentle',area:0,passage:3,elapsed:240,kills:75,runes:{...a.runes},unlocks:[...BASE_UNLOCKS,'track:bass'],music:safeMusic(DEFAULT_MUSIC,[...BASE_UNLOCKS,'track:bass']),pendingRune:'moss-3',health:90,herbs:3});
  if(navigate)location.href='./qa-game.html';
 }
- document.querySelectorAll('[data-fixture]').forEach(b=>b.onclick=()=>fixture(b.dataset.fixture));
- document.getElementById('phone').onclick=()=>{fixture('diamonds',false);document.getElementById('phoneFrame').innerHTML='<iframe title="Phone cabin preview" src="./"></iframe>';};
+ document.querySelectorAll('[data-fixture]').forEach(b=>b.onclick=async()=>{const frame=document.querySelector('iframe');if(!frame){fixture(b.dataset.fixture);return;}await new Promise(resolve=>{frame.onload=()=>{frame.onload=null;resolve();};frame.src='about:blank';});fixture(b.dataset.fixture,false);frame.src='./qa-game.html?fixture='+b.dataset.fixture;});
+ document.getElementById('phone').onclick=()=>{fixture('steady',false);document.getElementById('phoneFrame').innerHTML='<iframe title="Phone cabin preview" src="./qa-game.html"></iframe>';};
+ document.getElementById('rotatePreview').onclick=()=>{const frame=document.querySelector('iframe');if(frame){const portrait=frame.clientWidth>frame.clientHeight;frame.style.width=portrait?'390px':'844px';frame.style.height=portrait?'844px':'390px';}};
+ document.getElementById('smallPreview').onclick=()=>{const frame=document.querySelector('iframe');if(frame){frame.style.width='667px';frame.style.height='320px';}};
 </script></html>

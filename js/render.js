@@ -1,8 +1,8 @@
-import {WORLD,REGIONS,PASSAGE_SECONDS} from './data.js?v=2.1.1';
-import {loadSprites} from './sprites.js?v=2.1.1';
+import {WORLD,REGIONS,PASSAGE_SECONDS} from './data.js?v=2.2.0';
+import {loadSprites} from './sprites.js?v=2.2.0';
 const TAU=Math.PI*2;
 export class Renderer{
- constructor(canvas){this.canvas=canvas;this.ctx=canvas.getContext('2d');this.sprites=loadSprites();this.atlas=new Image();this.atlas.src=new URL('../assets/worlds.webp',import.meta.url).href;this.camera={x:0,y:0,scale:1};this.reducedMotion=false;this.smallScreen=matchMedia('(max-width: 760px) and (pointer: coarse)');this.time=0;this.w=0;this.h=0;}
+ constructor(canvas){this.canvas=canvas;this.ctx=canvas.getContext('2d');this.sprites=loadSprites();this.atlas=new Image();this.atlas.src=new URL('../assets/worlds.webp',import.meta.url).href;this.camera={x:0,y:0,scale:1};this.reducedMotion=false;this.smallScreen=matchMedia('(max-height: 600px) and (pointer: coarse)');this.time=0;this.w=0;this.h=0;}
  resize(){const r=this.canvas.getBoundingClientRect(),dpr=Math.min(devicePixelRatio||1,2);if(this.w!==r.width||this.h!==r.height){this.w=r.width;this.h=r.height;this.canvas.width=Math.round(r.width*dpr);this.canvas.height=Math.round(r.height*dpr);this.dpr=dpr;}}
  toWorld(x,y){return{x:(x-this.w/2)/this.camera.scale+this.camera.x,y:(y-this.h/2)/this.camera.scale+this.camera.y};}
  draw(g,dt=0){this.resize();this.time+=dt;const c=this.ctx,w=this.w,h=this.h;if(!w||!h)return;const region=REGIONS[g.area],p=g.player,t=this.reducedMotion?0:this.time;
@@ -29,7 +29,7 @@ export class Renderer{
  c.restore();const vignette=c.createRadialGradient(w/2,h/2,h*.2,w/2,h/2,Math.max(w,h)*.68);vignette.addColorStop(0,'rgba(7,20,25,0)');vignette.addColorStop(1,'rgba(7,20,25,.60)');c.fillStyle=vignette;c.fillRect(0,0,w,h);
  if(this.smallScreen.matches&&!g.isBoss)this.minimap(c,g,w);
  }
- minimap(c,g,w){const mw=w<600?94:114,mh=mw*WORLD.h/WORLD.w,x=w-mw-(w<600?12:22),y=w<760?65:85; c.save();c.translate(x,y);c.fillStyle='rgba(18,44,41,.78)';c.strokeStyle='rgba(205,223,184,.27)';c.lineWidth=1;c.beginPath();c.roundRect(0,0,mw,mh+17,7);c.fill();c.stroke();c.font='6px sans-serif';c.textAlign='left';c.fillStyle='#c5d4b5';c.fillText('ECHO MAP',8,11);const sx=(mw-14)/WORLD.w,sy=(mh-6)/WORLD.h;for(const shrine of g.shrines){c.fillStyle=shrine.active?'#9ab99b':'#f1d496';c.beginPath();c.arc(7+shrine.x*sx,17+shrine.y*sy,2.5,0,TAU);c.fill();}if(g.portal){c.strokeStyle='#d7e8be';c.beginPath();c.arc(7+WORLD.w*.5*sx,17+170*sy,4,0,TAU);c.stroke();}c.fillStyle='#f6f2dd';c.beginPath();c.arc(7+g.player.x*sx,17+g.player.y*sy,3,0,TAU);c.fill();c.restore();}
+ minimap(c,g,w){const mw=w<600?94:114,mh=mw*WORLD.h/WORLD.w,x=12,y=64; c.save();c.translate(x,y);c.fillStyle='rgba(18,44,41,.78)';c.strokeStyle='rgba(205,223,184,.27)';c.lineWidth=1;c.beginPath();c.roundRect(0,0,mw,mh+17,7);c.fill();c.stroke();c.font='6px sans-serif';c.textAlign='left';c.fillStyle='#c5d4b5';c.fillText('ECHO MAP',8,11);const sx=(mw-14)/WORLD.w,sy=(mh-6)/WORLD.h;for(const shrine of g.shrines){c.fillStyle=shrine.active?'#9ab99b':'#f1d496';c.beginPath();c.arc(7+shrine.x*sx,17+shrine.y*sy,2.5,0,TAU);c.fill();}if(g.portal){c.strokeStyle='#d7e8be';c.beginPath();c.arc(7+WORLD.w*.5*sx,17+170*sy,4,0,TAU);c.stroke();}c.fillStyle='#f6f2dd';c.beginPath();c.arc(7+g.player.x*sx,17+g.player.y*sy,3,0,TAU);c.fill();c.restore();}
  actor(c,e,t,weapon){c.save();const player=e.isPlayer,boss=e.boss,size=boss?160:e.special?92:player?75:e.kind==='snail'?74:65;const sprite=this.sprites[e.kind]||this.sprites.sprout;const bob=this.reducedMotion?0:Math.sin(t*(e.kind==='moth'?6:3)+e.x)*(!player&&e.kind==='moth'?8:player&&e.dashTime>0?0:2);
  c.translate(e.x,e.y+bob);if(e.spawn>0){c.globalAlpha=Math.max(.15,1-e.spawn/1.1);const s=Math.max(.1,1-e.spawn/1.1);c.scale(s,s);}if(player&&e.invincible>0&&Math.floor(t*12)%2===0)c.globalAlpha=.6;
  c.fillStyle='rgba(8,30,33,.28)';c.beginPath();c.ellipse(0,5,size*.32,size*.09,0,0,TAU);c.fill();

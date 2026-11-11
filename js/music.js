@@ -1,4 +1,4 @@
-import {REGIONS,KEYS,METERS,seeded,scaleNote,progression,clamp} from './data.js?v=2.1.1';
+import {REGIONS,KEYS,METERS,seeded,scaleNote,progression,clamp} from './data.js?v=2.2.0';
 export function beatSeconds(s){return 60/clamp(s.bpm,60,96)*(s.meter==='6/8'?.5:1);}
 export function barSeconds(s){return beatSeconds(s)*METERS[s.meter];}
 export function grooveTime(time,s){
@@ -65,14 +65,40 @@ function tone(ctx,out,e,t){
 export function scheduleBar(ctx,graph,s,seed,bar,start,limit=Infinity){for(const e of composeBar(s,seed,bar)){if(start+e.t>=limit||e.velocity<=0)continue;if(e.layer==='drums')percussion(ctx,graph.input,e,start+e.t,graph.noise);else tone(ctx,graph.input,e,start+e.t);}}
 export function encodeWav(channels,sampleRate){const length=channels[0].length,buffer=new ArrayBuffer(44+length*channels.length*2),v=new DataView(buffer);const text=(off,s)=>{for(let i=0;i<s.length;i++)v.setUint8(off+i,s.charCodeAt(i));};text(0,'RIFF');v.setUint32(4,buffer.byteLength-8,true);text(8,'WAVE');text(12,'fmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,channels.length,true);v.setUint32(24,sampleRate,true);v.setUint32(28,sampleRate*channels.length*2,true);v.setUint16(32,channels.length*2,true);v.setUint16(34,16,true);text(36,'data');v.setUint32(40,length*channels.length*2,true);let off=44;for(let i=0;i<length;i++)for(let c=0;c<channels.length;c++){const sample=clamp(channels[c][i],-1,1);v.setInt16(off,Math.round(sample*(sample<0?32768:32767)),true);off+=2;}return buffer;}
 export class MusicEngine{
- constructor(settings,seed){this.settings=structuredClone(settings);this.seed=seed;this.ctx=null;this.bar=0;this.next=0;this.muted=false;this.onBar=()=>{};}
- async start(){if(!this.ctx){const C=globalThis.AudioContext||globalThis.webkitAudioContext;if(!C)throw new Error('This browser does not support Web Audio.');this.ctx=new C();this.graph=createMusicGraph(this.ctx,this.settings,this.ctx.destination);}await this.ctx.resume();if(!this.timer){this.next=this.ctx.currentTime+.08;this.tick();this.timer=setInterval(()=>this.tick(),40);}}
- tick(){if(!this.ctx||this.ctx.state!=='running')return;while(this.next<this.ctx.currentTime+.16){const s=this.settings;this.updateGraph();scheduleBar(this.ctx,this.graph,s,this.seed,this.bar,this.next);this.onBar(this.bar,s,this.next);this.next+=barSeconds(s);this.bar++;}}
+ constructor(settings,seed,{platform=globalThis,resumeTimeout=1200}={}){this.settings=structuredClone(settings);this.seed=seed;this.platform=platform;this.resumeTimeout=resumeTimeout;this.ctx=null;this.graph=null;this.bar=0;this.next=0;this.muted=false;this.requested=false;this.failed=false;this.pending=null;this.timer=null;this.onBar=()=>{};this.onStateChange=()=>{};}
+ get running(){return this.ctx?.state==='running';}
+ get audible(){return this.running&&!this.muted&&this.settings.volume>0;}
+ notify(){this.onStateChange(this.ctx?.state||'idle');}
+ playbackSession(repair=false){try{const session=this.platform.navigator?.audioSession;if(session){if(repair)session.type='auto';session.type='playback';}}catch{}}
+ createContext(){const C=this.platform.AudioContext||this.platform.webkitAudioContext;if(!C)throw new Error('This browser does not support Web Audio.');return new C();}
+ createGraph(ctx){return createMusicGraph(ctx,this.settings,ctx.destination);}
+ primeContext(ctx){
+  // Start an inaudible source inside the tap, before yielding to any promise.
+  const source=ctx.createBufferSource();source.buffer=ctx.createBuffer(1,1,ctx.sampleRate);source.connect(ctx.destination);source.onended=()=>source.disconnect();source.start(0);
+ }
+ discardContext(){const old=this.ctx;this.ctx=null;this.graph=null;this.pending=null;if(this.timer){clearInterval(this.timer);this.timer=null;}if(old){old.onstatechange=null;try{return Promise.resolve(old.close()).catch(()=>{});}catch{}}return Promise.resolve();}
+ start({repair=false}={}){
+  this.requested=true;if(this.pending&&!repair)return this.pending;
+  this.playbackSession(repair||this.failed);
+  if(repair||this.ctx?.state==='closed'||this.failed&&!this.running)this.discardContext();
+  if(!this.ctx){const ctx=this.createContext();this.ctx=ctx;ctx.onstatechange=()=>{if(this.ctx!==ctx)return;if(ctx.state==='running'&&this.graph){this.next=ctx.currentTime+.04;this.tick();}this.notify();};}
+  const ctx=this.ctx;
+  // Safari must receive resume() synchronously from the initiating gesture.
+  let resumed;try{resumed=ctx.resume();this.primeContext(ctx);if(!this.graph)this.graph=this.createGraph(ctx);}catch(error){this.failed=true;this.notify();return Promise.reject(error);}
+  this.updateGraph();if(!this.timer)this.timer=setInterval(()=>this.tick(),40);this.notify();
+  let timeout;
+  const pending=Promise.race([Promise.resolve(resumed).then(()=>ctx.state==='running',()=>false),new Promise(resolve=>{timeout=setTimeout(()=>resolve(ctx.state==='running'),this.resumeTimeout);})]).then(ok=>{
+   if(this.ctx===ctx){this.failed=!ok;if(ok){this.next=ctx.currentTime+.04;this.tick();}this.notify();}return ok;
+  }).finally(()=>{clearTimeout(timeout);if(this.pending===pending)this.pending=null;});
+  this.pending=pending;return pending;
+ }
+ tick(){if(!this.running||!this.graph)return;const now=this.ctx.currentTime;if(this.next<now-.08||this.next>now+barSeconds(this.settings)*2)this.next=now+.04;let scheduled=0;while(this.next<now+.16&&scheduled++<2){const s=this.settings;this.updateGraph();scheduleBar(this.ctx,this.graph,s,this.seed,this.bar,this.next);this.onBar(this.bar,s,this.next);this.next+=barSeconds(s);this.bar++;}}
  updateGraph(){if(!this.graph)return;const now=this.ctx.currentTime,g=this.graph,s=this.settings,echo=delayParameters(s);for(const [param,val]of [[g.filter.frequency,11000-s.warmth*8000],[g.wet.gain,s.reverb*.5],[g.delayMix.gain,echo.mix],[g.feedback.gain,echo.feedback],[g.delay.delayTime,echo.time],[g.chorusMix.gain,clamp(s.chorus||0,0,1)*.28],[g.master.gain,this.muted?0:s.volume*.8]])param.setTargetAtTime(val,now,.2);}
- set(s){this.settings=structuredClone(s);this.updateGraph();}
+ set(s){this.settings=structuredClone(s);this.updateGraph();this.notify();}
  reseed(seed){this.seed=seed;}
- mute(m){this.muted=m;this.updateGraph();}
- async suspend(){if(this.ctx?.state==='running')await this.ctx.suspend();}
- async resume(){if(this.ctx){await this.ctx.resume();this.tick();}}
- sfx(kind){if(!this.ctx||this.muted||this.ctx.state!=='running')return;const t=this.ctx.currentTime;const notes=kind==='unlock'?[72,76,79,84]:kind==='heal'?[69,76]:kind==='hit'?[48]:kind==='dash'?[62]:[55];notes.forEach((n,i)=>tone(this.ctx,this.graph.input,{note:n,duration:kind==='unlock'?.3:.06,velocity:kind==='hit'?.045:.10,instrument:'bell',layer:'melody'},t+i*.085));}
+ mute(m){this.muted=m;this.updateGraph();this.notify();}
+ async suspend(){try{if(this.ctx&&this.ctx.state!=='closed')await this.ctx.suspend();}catch{}this.notify();}
+ resume(){return this.requested?this.start():Promise.resolve(false);}
+ async dispose(){this.requested=false;await this.discardContext();this.notify();}
+ sfx(kind){if(!this.ctx||this.muted||!this.running)return;const t=this.ctx.currentTime;const notes=kind==='unlock'?[72,76,79,84]:kind==='heal'?[69,76]:kind==='hit'?[48]:kind==='dash'?[62]:[55];notes.forEach((n,i)=>tone(this.ctx,this.graph.input,{note:n,duration:kind==='unlock'?.3:.06,velocity:kind==='hit'?.045:.10,instrument:'bell',layer:'melody'},t+i*.085));}
 }
