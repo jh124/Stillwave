@@ -1,4 +1,4 @@
-import {WORLD,REGIONS,WEAPONS,PASSAGES,PASSAGE_SECONDS,seeded,newSeed,clamp} from './data.js';
+import {WORLD,REGIONS,WEAPONS,PASSAGES,PASSAGE_SECONDS,seeded,newSeed,clamp} from './data.js?v=1.0.2';
 const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
 export function placeEchoShrines(rng,spawn){
  const shrines=[],exit={x:WORLD.w*.5,y:170};

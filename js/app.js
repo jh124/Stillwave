@@ -1,8 +1,8 @@
-import {REGIONS,WEAPONS,UNLOCKS,BASE_UNLOCKS,LAYERS,INSTRUMENTS,KEYS,SCALES,METERS,DEFAULT_MUSIC,PASSAGES,PASSAGE_SECONDS,clamp,newSeed,safeMusic} from './data.js';
-import {readArchive,writeArchive,grantUnlock,grantNext,readRun,writeRun,clearRun} from './save.js';
-import {MusicEngine} from './music.js';
-import {Journey} from './engine.js';
-import {Renderer} from './render.js';
+import {REGIONS,WEAPONS,UNLOCKS,BASE_UNLOCKS,LAYERS,INSTRUMENTS,KEYS,SCALES,METERS,DEFAULT_MUSIC,PASSAGES,PASSAGE_SECONDS,clamp,newSeed,safeMusic} from './data.js?v=1.0.2';
+import {readArchive,writeArchive,grantUnlock,grantNext,readRun,writeRun,clearRun} from './save.js?v=1.0.2';
+import {MusicEngine} from './music.js?v=1.0.2';
+import {Journey} from './engine.js?v=1.0.2';
+import {Renderer} from './render.js?v=1.0.2';
 const $=id=>document.getElementById(id),esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const iconPaths={'↗':'M3 13 13 3M3 3h10v10','→':'M2 8h12M9 3l5 5-5 5','↓':'M8 2v12M3 9l5 5 5-5','↻':'M13 6a5.5 5.5 0 1 0 .1 5M13 2v4H9'};
 function decorateIcons(root=document){root.querySelectorAll('span').forEach(el=>{const path=iconPaths[el.textContent.trim()];if(path)el.innerHTML=`<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${path}"/></svg>`;});}

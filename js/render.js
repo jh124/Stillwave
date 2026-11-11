@@ -1,5 +1,5 @@
-import {WORLD,REGIONS,PASSAGE_SECONDS} from './data.js';
-import {loadSprites} from './sprites.js';
+import {WORLD,REGIONS,PASSAGE_SECONDS} from './data.js?v=1.0.2';
+import {loadSprites} from './sprites.js?v=1.0.2';
 const TAU=Math.PI*2;
 export class Renderer{
  constructor(canvas){this.canvas=canvas;this.ctx=canvas.getContext('2d');this.sprites=loadSprites();this.atlas=new Image();this.atlas.src=new URL('../assets/worlds.webp',import.meta.url).href;this.camera={x:0,y:0,scale:1};this.reducedMotion=false;this.time=0;this.w=0;this.h=0;}

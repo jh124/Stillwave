@@ -1,4 +1,4 @@
-import {BASE_UNLOCKS,DEFAULT_MUSIC,UNLOCKS,REGIONS,safeMusic} from './data.js';
+import {BASE_UNLOCKS,DEFAULT_MUSIC,UNLOCKS,REGIONS,safeMusic} from './data.js?v=1.0.2';
 export const SAVE_KEY='stillwave.archive.v1';
 export const RUN_KEY='stillwave.run.v1';
 const fresh=()=>({version:1,unlocks:[...BASE_UNLOCKS],runs:0,kills:0,bosses:[],cleared:false,bestArea:0,totalSeconds:0,music:structuredClone(DEFAULT_MUSIC),difficulty:'standard',reducedMotion:false,autoAim:true});
