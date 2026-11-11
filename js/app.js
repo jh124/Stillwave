@@ -1,10 +1,10 @@
-import {REGIONS,WEAPONS,UNLOCKS,BASE_UNLOCKS,LAYERS,INSTRUMENTS,KEYS,SCALES,METERS,DEFAULT_MUSIC,PASSAGES,PASSAGE_SECONDS,WAYCHIMES,BLESSINGS,clamp,newSeed,safeMusic} from './data.js?v=2.2.0';
-import {readArchive,writeArchive,grantUnlock,grantNext,readRun,writeRun,clearRun,mergeRunRunes,completeJourney} from './save.js?v=2.2.0';
-import {MusicEngine} from './music.js?v=2.2.0';
-import {Journey} from './engine.js?v=2.2.0';
-import {Renderer} from './render.js?v=2.2.0';
-import {MobileLayout} from './mobile.js?v=2.2.0';
-import {esc,formatTime,closeMarkup,header,weaponArt,runeGlyph,decorateIcons} from './ui.js?v=2.2.0';
+import {REGIONS,WEAPONS,UNLOCKS,BASE_UNLOCKS,LAYERS,INSTRUMENTS,KEYS,SCALES,METERS,DEFAULT_MUSIC,PASSAGES,PASSAGE_SECONDS,WAYCHIMES,BLESSINGS,clamp,newSeed,safeMusic} from './data.js?v=2.2.1';
+import {readArchive,writeArchive,grantUnlock,grantNext,readRun,writeRun,clearRun,mergeRunRunes,completeJourney} from './save.js?v=2.2.1';
+import {MusicEngine} from './music.js?v=2.2.1';
+import {Journey} from './engine.js?v=2.2.1';
+import {Renderer} from './render.js?v=2.2.1';
+import {MobileLayout} from './mobile.js?v=2.2.1';
+import {esc,formatTime,closeMarkup,header,weaponArt,runeGlyph,decorateIcons} from './ui.js?v=2.2.1';
 const $=id=>document.getElementById(id);
 let archive=readArchive(),savedRun=readRun();mergeRunRunes(archive,savedRun);
 let studioMusic=safeMusic(archive.music,archive.unlocks,archive.cleared,archive.steadyCleared),music=studioMusic,scene='studio',game=null,paused=false,modalMode='',musicReturn='studio',collectionReturn='studio',selectedWeapon='sword',accountedSeconds=0,checkpointAt=0,last=performance.now(),hudAt=0,muted=archive.muted;
@@ -37,7 +37,7 @@ function refreshAudioUI(){
 async function startAudio(options={}){if(muted){refreshAudioUI();return false;}try{audio.mute(false);const ok=await audio.start(options);refreshAudioUI();return ok;}catch(error){toast('Tap Sound on to try again',error.message);refreshAudioUI();return false;}}
 function syncMusic(){audio.set(music);$('musicSummary').textContent=`${REGIONS[music.genre].genre} · ${music.key} ${music.scale} · ${Math.round(music.bpm)} BPM`;$('trackLights').innerHTML=LAYERS.map(l=>`<span title="${l}" class="${owned('track:'+l)&&music.layers[l]?'active':''}"></span>`).join('');refreshAudioUI();if(scene==='studio')refreshHome();}
 function toggleMute(){if(muted||!audio.running){muted=false;archive.muted=false;startAudio();}else{muted=true;archive.muted=true;audio.mute(true);}refreshAudioUI();persist();}
-function recoverAudio(event){if(event.isTrusted&&audio.requested&&!muted&&!audio.running&&!document.hidden)startAudio();}
+function recoverAudio(event){if(event.target?.closest?.('#listenBtn,#gameSoundBtn,#previewMusic'))return;if(event.isTrusted&&audio.requested&&!muted&&!audio.running&&!document.hidden)startAudio();}
 for(const event of ['pointerup','touchend','keydown'])window.addEventListener(event,recoverAudio,{capture:true,passive:true});
 function syncPanelTabs(){
  for(const [attribute,page] of [['mixer',mixerPage],['help',helpPage]]){
