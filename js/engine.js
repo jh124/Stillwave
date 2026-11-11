@@ -1,4 +1,4 @@
-import {WORLD,REGIONS,WEAPONS,PASSAGES,PASSAGE_SECONDS,seeded,newSeed,clamp} from './data.js?v=1.0.2';
+import {WORLD,REGIONS,WEAPONS,PASSAGES,PASSAGE_SECONDS,seeded,newSeed,clamp,difficultyTuning,cleanRunes,runeAt,BASE_UNLOCKS,DEFAULT_MUSIC,normalizeUnlocks,fieldMusic} from './data.js?v=2.0.0';
 const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
 export function placeEchoShrines(rng,spawn){
  const shrines=[],exit={x:WORLD.w*.5,y:170};
@@ -9,13 +9,13 @@ export function placeEchoShrines(rng,spawn){
  return shrines;
 }
 export class Journey{
- constructor({seed=newSeed(),weapon='sword',difficulty='standard',area=0,passage=0,elapsed=0,kills=0,boons=[],health=110,herbs=3,onEvent=()=>{}}={}){
-  Object.assign(this,{seed,weapon,difficulty,area,passage,elapsed,kills,boons,onEvent});this.rng=seeded(seed);this.state='playing';this.player={x:WORLD.w/2,y:WORLD.h/2,r:17,hp:health,maxHp:110,invincible:1.5,attack:0,dash:0,dashTime:0,dx:1,dy:0,facing:0,combo:0,herbs:clamp(herbs,0,4)};this.rebuildStats();this.enterRoom();
+ constructor({seed=newSeed(),weapon='sword',difficulty='standard',area=0,passage=0,elapsed=0,kills=0,runes={},unlocks=BASE_UNLOCKS,music=DEFAULT_MUSIC,musicSeed=seed,pendingRune=null,health=null,herbs=3,onEvent=()=>{}}={}){
+  Object.assign(this,{seed,weapon,difficulty,area,passage,elapsed,kills,onEvent});this.runes=cleanRunes(runes);this.boons=Object.values(this.runes);this.unlocks=normalizeUnlocks(unlocks);this.music=fieldMusic(music,this.unlocks,area);this.musicSeed=musicSeed;this.pendingRune=null;this.rng=seeded(seed);this.state='playing';this.player={x:WORLD.w/2,y:WORLD.h/2,r:17,hp:Number.isFinite(health)?health:110,maxHp:110,invincible:1.5,attack:0,dash:0,dashTime:0,dx:1,dy:0,facing:0,combo:0,herbs:clamp(herbs,0,4)};this.rebuildStats();this.player.hp=Number.isFinite(health)?clamp(health,1,this.player.maxHp):this.player.maxHp;this.enterRoom();if(runeAt(area,passage)?.id===pendingRune){this.pendingRune=pendingRune;this.state='rune';}
  }
  rebuildStats(){const p=this.player;p.maxHp=110+this.boons.filter(b=>b==='heart').length*18;p.hp=Math.min(p.maxHp,p.hp);this.damageBonus=1+this.boons.filter(b=>b==='edge').length*.13;this.speedBonus=1+this.boons.filter(b=>b==='wind').length*.055;this.coolBonus=1-this.boons.filter(b=>b==='flow').length*.07;}
  enterRoom(){
   const r=seeded((this.seed+this.area*10007+this.passage*1031)>>>0);this.roomRng=r;this.roomTime=0;this.wave=0;this.enemies=[];this.projectiles=[];this.telegraphs=[];this.effects=[];this.pickups=[];this.attackArcs=[];this.portal=false;this.echoes=0;this.roomKills=0;this.roomDamage=0;this.guardianDefeated=false;this.player.x=WORLD.w/2;this.player.y=WORLD.h*.68;this.player.invincible=2;
-  this.isBoss=this.passage===PASSAGES;this.obstacles=[];this.decor=[];
+  this.tuning=difficultyTuning(this.difficulty,this.area,this.passage);this.isBoss=this.passage===PASSAGES;this.obstacles=[];this.decor=[];
   for(let i=0;i<48;i++){const x=100+r()*(WORLD.w-200),y=90+r()*(WORLD.h-180);if(Math.hypot(x-WORLD.w/2,y-WORLD.h*.68)<100)continue;const edge=x<260||x>WORLD.w-260||y<200||y>WORLD.h-160;this.decor.push({x,y,kind:Math.floor(r()*6),scale:.7+r()*.6,phase:r()*6.28,edge});}
   this.shrines=this.isBoss?[]:placeEchoShrines(r,this.player);
   this.roomFlavor=this.isBoss?'guardian':['Lantern walk','Wildflower drift','Quiet crossing','A slower current','Silver branches','The listening path','A little clearing','Echoes at dusk'][(this.passage+this.area*3)%8];
@@ -26,16 +26,16 @@ export class Journey{
  spawnEnemy(kind,special=false,x,y){
   const rng=this.roomRng,p=this.player;if(x===undefined){const angle=rng()*Math.PI*2;x=clamp(p.x+Math.cos(angle)*(360+rng()*160),120,WORLD.w-120);y=clamp(p.y+Math.sin(angle)*(300+rng()*120),120,WORLD.h-120);}
   const cfg={sprout:{hp:36,speed:57,r:18,damage:8},moth:{hp:29,speed:84,r:18,damage:6},snail:{hp:63,speed:38,r:22,damage:11},wisp:{hp:31,speed:45,r:17,damage:7},special:{hp:125,speed:49,r:25,damage:10}}[kind];
-  const scale=1+this.area*.08+this.passage*.015;const e={x,y,...cfg,hp:cfg.hp*scale,maxHp:cfg.hp*scale,kind,special,phase:rng()*6.28,age:0,cooldown:1.3+rng()*1.5,windup:0,flash:0,knockX:0,knockY:0,alive:true,spawn:1.1};if(special){const variants=['chord','tempo','reverb','meter'];e.variant=variants[(Math.floor(this.passage/2)+this.area)%4];e.specialName={chord:'Chordkeeper',tempo:'Tempo Wanderer',reverb:'Echo Weaver',meter:'Meter Warden'}[e.variant];if(e.variant==='tempo')e.speed=75;if(e.variant==='meter')e.hp=e.maxHp*=1.2;}this.enemies.push(e);return e;
+  const scale=1+this.area*.08+this.passage*.015;const e={x,y,...cfg,hp:cfg.hp*scale*this.tuning.health,maxHp:cfg.hp*scale*this.tuning.health,damage:cfg.damage*this.tuning.damage,kind,special,phase:rng()*6.28,age:0,cooldown:1.3+rng()*1.5,windup:0,flash:0,knockX:0,knockY:0,alive:true,spawn:1.1};if(special){const variants=['chord','tempo','reverb','meter'];e.variant=variants[(Math.floor(this.passage/2)+this.area)%4];e.specialName={chord:'Chordkeeper',tempo:'Tempo Wanderer',reverb:'Echo Weaver',meter:'Meter Warden'}[e.variant];if(e.variant==='tempo')e.speed=75;if(e.variant==='meter')e.hp=e.maxHp*=1.2;}this.enemies.push(e);return e;
  }
  spawnWave(){
-  const kinds=['sprout','moth','snail','wisp'];const count=3+Math.min(2,Math.floor(this.area/2))+(this.wave%3===2?1:0);
+  const kinds=['sprout','moth','snail','wisp'];const count=3+Math.min(2,Math.floor(this.area/2))+(this.wave%3===2?1:0)+this.tuning.extraEnemies;
   for(let i=0;i<count;i++)this.spawnEnemy(kinds[(i+this.wave+this.passage+Math.floor(this.roomRng()*3))%4]);
   if(this.passage%2===1&&this.wave===3)this.spawnEnemy('special',true);
   this.wave++;this.onEvent({type:'wave',wave:this.wave});
  }
- spawnBoss(){const e=this.spawnEnemy('special',false,WORLD.w/2,WORLD.h*.3);e.boss=true;e.kind=REGIONS[this.area].bossKind;e.r=48;e.hp=e.maxHp=1500+this.area*180;e.speed=42+this.area*3;e.damage=13;e.cooldown=3.2;e.phaseNo=1;e.special=false;this.boss=e;this.onEvent({type:'boss',name:REGIONS[this.area].boss});}
- checkpoint(){return {version:1,seed:this.seed,weapon:this.weapon,difficulty:this.difficulty,area:this.area,passage:this.passage,elapsed:this.elapsed,kills:this.kills,boons:[...this.boons],health:this.player.hp,herbs:this.player.herbs};}
+ spawnBoss(){const e=this.spawnEnemy('special',false,WORLD.w/2,WORLD.h*.3);e.boss=true;e.kind=REGIONS[this.area].bossKind;e.r=48;e.hp=e.maxHp=(1500+this.area*180)*this.tuning.health;e.speed=42+this.area*3;e.damage=13*this.tuning.damage;e.cooldown=3.2;e.phaseNo=1;e.special=false;this.boss=e;this.onEvent({type:'boss',name:REGIONS[this.area].boss});}
+ checkpoint(){return {version:2,seed:this.seed,weapon:this.weapon,difficulty:this.difficulty,area:this.area,passage:this.passage,elapsed:this.elapsed,kills:this.kills,runes:{...this.runes},unlocks:[...this.unlocks],music:structuredClone(this.music),musicSeed:this.musicSeed,pendingRune:this.pendingRune,health:this.player.hp,herbs:this.player.herbs};}
  input(input,dt){
   const p=this.player;let x=input.x||0,y=input.y||0,len=Math.hypot(x,y);if(len>1){x/=len;y/=len;len=1;}if(len>.04){p.dx=x/(len||1);p.dy=y/(len||1);}const speed=193*this.speedBonus*(this.roomModifier==='breeze'?1.10:1);
   if(input.dash&&p.dash<=0&&p.dashTime<=0){p.dashTime=.22;p.dash=2.0;p.invincible=Math.max(p.invincible,.36);this.onEvent({type:'dash'});}
@@ -64,20 +64,24 @@ export class Journey{
   if(e.boss){this.guardianDefeated=true;this.onEvent({type:'bossDefeated',area:this.area});this.enemies.forEach(other=>{if(!other.boss)other.alive=false;});this.projectiles=this.projectiles.filter(p=>p.kind==='arrow');this.telegraphs=[];this.complete();}
   else if(this.roomRng()<.19)this.pickups.push({x:e.x,y:e.y,kind:'health',r:12,age:0});
  }
- damagePlayer(n){const p=this.player;if(p.invincible>0||this.state!=='playing')return;p.hp=Math.max(0,p.hp-n*(this.difficulty==='gentle'?.58:1));p.invincible=1.1;this.roomDamage+=n;this.onEvent({type:'hurt'});this.effects.push({kind:'hurt',x:p.x,y:p.y,life:.45,max:.45});if(p.hp<=0){this.state='dead';this.onEvent({type:'death',elapsed:this.elapsed,kills:this.kills,area:this.area});}}
+ damagePlayer(n){const p=this.player;if(p.invincible>0||this.state!=='playing')return;p.hp=Math.max(0,p.hp-n);p.invincible=1.1;this.roomDamage+=n;this.onEvent({type:'hurt'});this.effects.push({kind:'hurt',x:p.x,y:p.y,life:.45,max:.45});if(p.hp<=0){this.state='dead';this.onEvent({type:'death',elapsed:this.elapsed,kills:this.kills,area:this.area});}}
  heal(){const p=this.player;if(p.herbs<=0||p.hp>=p.maxHp||this.state!=='playing')return;p.herbs--;p.hp=Math.min(p.maxHp,p.hp+45);this.onEvent({type:'heal'});this.effects.push({kind:'heal',x:p.x,y:p.y,life:.8,max:.8});}
  activateShrine(){const p=this.player;const shrine=this.shrines.find(s=>!s.active&&distance(p,s)<95);if(shrine){shrine.active=true;this.echoes++;p.hp=Math.min(p.maxHp,p.hp+8);this.onEvent({type:'echo',count:this.echoes});this.effects.push({kind:'heal',x:shrine.x,y:shrine.y,life:1,max:1});}}
  complete(){if(this.portal)return;this.portal=true;this.player.hp=Math.min(this.player.maxHp,this.player.hp+(this.isBoss?40:16));if(this.passage%2===1)this.player.herbs=Math.min(4,this.player.herbs+1);this.onEvent({type:'clear',boss:this.isBoss,flawless:this.roomDamage===0});}
- advance(){if(!this.portal||this.state!=='playing')return;if(this.isBoss){if(this.area===REGIONS.length-1){this.state='won';this.onEvent({type:'victory',elapsed:this.elapsed,kills:this.kills});return;}this.area++;this.passage=0;this.player.hp=this.player.maxHp;this.player.herbs=Math.min(4,this.player.herbs+1);this.onEvent({type:'region',area:this.area});}else{this.passage++;if(this.passage===3||this.passage===6){this.state='boon';this.onEvent({type:'boon'});return;}}this.enterRoom();}
- chooseBoon(id){if(!['heart','edge','wind','flow'].includes(id)||this.state!=='boon')return;this.boons.push(id);this.rebuildStats();this.player.hp=Math.min(this.player.maxHp,this.player.hp+20);this.state='playing';this.enterRoom();}
+ advance(){if(!this.portal||this.state!=='playing')return;if(this.isBoss){if(this.area===REGIONS.length-1){this.state='won';this.onEvent({type:'victory',elapsed:this.elapsed,kills:this.kills});return;}this.area++;this.passage=0;this.player.hp=this.player.maxHp;this.player.herbs=Math.min(4,this.player.herbs+1);this.onEvent({type:'region',area:this.area});}else{this.passage++;if(this.passage===3||this.passage===6){this.pendingRune=runeAt(this.area,this.passage).id;this.state='rune';this.onEvent({type:'rune',id:this.pendingRune});return;}}this.enterRoom();}
+ chooseRune(choice){
+  if(!['heart','edge','wind','flow'].includes(choice)||this.state!=='rune'||!this.pendingRune)return false;
+  const id=this.pendingRune,first=!Object.hasOwn(this.runes,id);this.runes[id]=choice;this.boons=Object.values(this.runes);this.rebuildStats();this.player.hp=Math.min(this.player.maxHp,this.player.hp+20);this.pendingRune=null;this.onEvent({type:'runeBound',id,choice,first});this.state='playing';this.enterRoom();return true;
+ }
+
  update(dt,input={}){
   if(this.state!=='playing')return;dt=clamp(dt,0,.05);this.elapsed+=dt;this.roomTime+=dt;const p=this.player;for(const k of ['attack','invincible','dash','dashTime'])p[k]=Math.max(0,p[k]-dt);this.input(input,dt);if(this.state!=='playing')return;
-  if(!this.isBoss&&!this.portal&&this.wave<6&&this.roomTime>=this.wave*12&&this.enemies.filter(e=>e.alive).length<9)this.spawnWave();
+  if(!this.isBoss&&!this.portal&&this.wave<6&&this.roomTime>=this.wave*12&&this.enemies.filter(e=>e.alive).length<this.tuning.cap)this.spawnWave();
   for(const e of this.enemies){if(!e.alive)continue;e.age+=dt;e.spawn-=dt;e.flash=Math.max(0,e.flash-dt);if(e.spawn>0)continue;const d=distance(e,p),a=Math.atan2(p.y-e.y,p.x-e.x);e.cooldown-=dt;
    e.x+=e.knockX*dt;e.y+=e.knockY*dt;e.knockX*=Math.exp(-dt*10);e.knockY*=Math.exp(-dt*10);
    if(e.windup>0){e.windup-=dt;if(e.windup<=0){if(e.attackType==='charge'){e.chargeTime=.55;e.chargeA=e.lockA;}else if(e.attackType==='shot'){this.enemyShot(e,e.lockA,e.special?5:1);}else if(e.attackType==='ring'){this.ringAttack(e);}else if(e.attackType==='bloom'){this.bloomAttack(e);}else if(e.attackType==='summon'){for(let i=0;i<3;i++)this.spawnEnemy(i%2?'moth':'sprout',false,clamp(e.x+(i-1)*100,100,WORLD.w-100),clamp(e.y+110,100,WORLD.h-100));}else if(d<e.r+65)this.damagePlayer(e.damage);}continue;}
    if(e.chargeTime>0){e.chargeTime-=dt;e.x+=Math.cos(e.chargeA)*360*dt;e.y+=Math.sin(e.chargeA)*360*dt;if(d<e.r+p.r+8)this.damagePlayer(e.damage);}
-   else{let speed=e.speed*(this.difficulty==='gentle'?.88:1);const ranged=e.kind==='wisp'||e.special&&e.variant!=='tempo';const wanted=e.boss?220:ranged?240:e.r+p.r+18;if(d>wanted){e.x+=Math.cos(a)*speed*dt;e.y+=Math.sin(a)*speed*dt;}else if(ranged&&d<150){e.x-=Math.cos(a)*speed*.6*dt;e.y-=Math.sin(a)*speed*.6*dt;}
+   else{let speed=e.speed;const ranged=e.kind==='wisp'||e.special&&e.variant!=='tempo';const wanted=e.boss?220:ranged?240:e.r+p.r+18;if(d>wanted){e.x+=Math.cos(a)*speed*dt;e.y+=Math.sin(a)*speed*dt;}else if(ranged&&d<150){e.x-=Math.cos(a)*speed*.6*dt;e.y-=Math.sin(a)*speed*.6*dt;}
     if(e.boss&&e.cooldown<=0){e.phaseNo=e.hp<e.maxHp*.5?2:1;const cycle=Math.floor(e.age/4)%4;const patterns=[['ring','bloom','charge','summon'],['charge','shot','ring','bloom'],['bloom','summon','ring','charge'],['ring','shot','bloom','summon'],['bloom','ring','summon','shot'],['bloom','shot','charge','ring']];this.windUp(e,patterns[this.area][cycle],a,1.1);e.cooldown=e.phaseNo===2?2.9:3.7;}
     else if(!e.boss&&e.cooldown<=0&&(d<(ranged?550:180))){const attack=e.special?({chord:'summon',tempo:'charge',reverb:'shot',meter:'ring'}[e.variant]):ranged?'shot':e.kind==='moth'?'charge':'melee';this.windUp(e,attack,a,e.kind==='moth'?.85:.95);e.cooldown=e.special&&e.variant==='chord'?7:e.special?3.8:e.kind==='wisp'?3.2:2.5;if(e.special&&e.variant==='chord'){e.variant='reverb';}}
    }

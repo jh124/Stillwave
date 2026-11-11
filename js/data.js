@@ -1,4 +1,4 @@
-export const VERSION = '1.0.2';
+export const VERSION = '2.0.0';
 export const PASSAGES = 8;
 export const PASSAGE_SECONDS = 75;
 export const WORLD = {w:1600,h:1100};
@@ -55,7 +55,7 @@ export function seeded(seed){let a=seed>>>0;return()=>{a+=0x6D2B79F5;let t=a;t=M
 export function clamp(v,a,b){return Number.isFinite(v)?Math.max(a,Math.min(b,v)):a;}
 export function newSeed(){return globalThis.crypto?.getRandomValues ? globalThis.crypto.getRandomValues(new Uint32Array(1))[0] : (Date.now()^Math.floor(Math.random()*1e9))>>>0;}
 export function safeMusic(input={},unlocks=BASE_UNLOCKS,free=false){
- const owned=new Set(unlocks);const s=structuredClone(DEFAULT_MUSIC);const allowed=id=>free||owned.has(id);
+ input=input&&typeof input==='object'?input:{};const owned=new Set(unlocks);const s=structuredClone(DEFAULT_MUSIC);const allowed=id=>free||owned.has(id);
  s.genre=clamp(Number(input.genre)||0,0,5)|0;
  if(!allowed('genre:'+REGIONS[s.genre].id))s.genre=0;
  s.bpm=allowed('effect:tempo')?clamp(Number(input.bpm)||76,60,96):REGIONS[s.genre].bpm;
@@ -71,3 +71,23 @@ export function safeMusic(input={},unlocks=BASE_UNLOCKS,free=false){
 export function progression(scale,bar,seed=0){const minor=scale==='minor'||scale==='pentatonic',choices=minor?[[0,5,2,6,0,3,5,4],[0,3,5,4,0,2,6,5],[0,2,5,6,0,5,3,4]]:[[0,4,5,3,0,5,1,4],[0,5,3,4,0,1,3,4],[0,3,4,5,0,5,1,4]];return choices[(seed>>>0)%choices.length][Math.floor(bar/2)%8];}
 export function scaleNote(root,scale,degree){const notes=SCALES[scale]||SCALES.minor;return root+12*Math.floor(degree/notes.length)+notes[((degree%notes.length)+notes.length)%notes.length];}
 export function campaignMinimumSeconds(){return REGIONS.length*PASSAGES*PASSAGE_SECONDS;}
+
+export const BLESSINGS = {
+ edge:{name:'Keen song',icon:'edge',desc:'13% more weapon damage.',short:'+13% damage'},
+ heart:{name:'Hearthsong',icon:'heart',desc:'18 more maximum health.',short:'+18 health'},
+ wind:{name:'Wandering air',icon:'wind',desc:'5.5% faster footsteps.',short:'+5.5% movement'},
+ flow:{name:'Quick refrain',icon:'flow',desc:'7% faster attack recovery, up to 45%.',short:'7% faster attacks'}
+};
+const chimeNames=['Lanternfall','Mossbound','Neonwake','Nightglass','Bitbloom','Oldspark','Tideglass','Sunwoven','Cloudsong','Hushbell','Dawnthread','Firstlight'];
+export const WAYCHIMES=REGIONS.flatMap((region,area)=>[3,6].map((passage,stop)=>({id:`${region.id}-${passage}`,name:chimeNames[area*2+stop],area,passage,index:area*2+stop,color:region.accent})));
+export function runeAt(area,passage){return WAYCHIMES.find(r=>r.area===area&&r.passage===passage)||null;}
+export function cleanRunes(input={}){return Object.fromEntries(WAYCHIMES.filter(r=>Object.hasOwn(input||{},r.id)&&Object.hasOwn(BLESSINGS,input[r.id])).map(r=>[r.id,input[r.id]]));}
+export function migrateBoons(boons=[],area=0,passage=0){const reached=WAYCHIMES.filter(r=>r.area<area||r.area===area&&r.passage<=passage);return Object.fromEntries((Array.isArray(boons)?boons:[]).slice(0,reached.length).flatMap((b,i)=>Object.hasOwn(BLESSINGS,b)?[[reached[i].id,b]]:[]));}
+export function normalizeUnlocks(input=[]){const valid=new Set([...BASE_UNLOCKS,...UNLOCKS.map(u=>u.id)]);return [...new Set([...BASE_UNLOCKS,...(Array.isArray(input)?input:[]).filter(id=>valid.has(id))])];}
+export function freshRunMusic(volume=.65){return safeMusic({...DEFAULT_MUSIC,volume},BASE_UNLOCKS);}
+export function difficultyTuning(difficulty,area,passage){
+ if(difficulty==='gentle')return {health:1,damage:1,extraEnemies:0,cap:9};
+ const p=clamp(area,0,5)+clamp(passage,0,8)/8;
+ return {health:1.12+.14*p+.028*p*p,damage:1.08+.13*p+.012*p*p,extraEnemies:1+Math.floor(p*.55),cap:11+Math.floor(p*1.4)};
+}
+export function fieldMusic(input={},unlocks=BASE_UNLOCKS,area=0){const sound=safeMusic(input,unlocks),region=REGIONS[area]||REGIONS[0];sound.genre=area;if(!unlocks.includes('effect:tempo'))sound.bpm=region.bpm;const regional=region.gift.split(':')[1];if(input?.instruments?.chords===regional)sound.instruments.chords=regional;return sound;}

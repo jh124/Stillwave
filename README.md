@@ -2,9 +2,9 @@
 
 **[Play Stillwave](https://jh124.github.io/Don-t-play-This-Game/)**
 
-![Stillwave in Mosslight Gardens](assets/preview.webp)
+![The Stillwave cabin studio](assets/preview.webp)
 
-A gentle musical action roguelike. Wander through six illustrated worlds, collect a palette of sounds, and compose a little record of your own. This replaces the original tower-defense game; its source remains in Git history.
+A musical action roguelike with a small cabin to come home to. Wander through six illustrated worlds, bind permanent Waychimes, and bring new sounds back to your studio. This replaces the original tower-defense game; its source remains in Git history.
 
 ## The journey
 
@@ -19,16 +19,16 @@ A gentle musical action roguelike. Wander through six illustrated worlds, collec
 
 Each world contains eight passages and a distinct, two-phase guardian. Each passage unfolds through six encounters over at least 75 seconds. Collect the three echo shrines and clear the creatures to open the north gateway. Three echo shrines are scattered independently across the walkable map, with spacing from one another, the arrival point, and the exit. Encounters, scenery details, and musical arrangements also vary with the journey seed. Some passages have a gentle movement boost or a bonus healing bloom.
 
-The 48 passages alone take at least 60 minutes of active simulation, before boss fights and exploration. A first clear is designed for about 70–90 minutes, although actual player pacing has not been established through an hour-long human playtest. The game pauses in the background. Save & return to title lets you take longer breaks.
+The 48 passages alone take at least 60 minutes of active simulation, before boss fights and exploration. A first clear is designed for about 70–90 minutes, although actual player pacing has not been established through an hour-long human playtest. The game pauses in the background. Save & return to the cabin lets you take longer breaks.
 
 Pick one companion for a run:
 
 - **Moonblade:** 36 damage per hit, 0.62-second base recovery, broad cleave, 120-unit reach, and 1 health restored every third successful swing. Better damage, more exposure.
 - **Willowbow:** 22 damage per hit, 0.48-second base recovery, 580-unit reach, arrows that can hit two enemies. More room to dodge, lower damage.
 
-Attack recovery and travel time create measured base single-target rates 55.8 and 44 damage per second respectively in the 20-second stationary-target regression scenario. Both weapons receive the same run upgrade opportunities. **Gentle** mode reduces enemy movement and incoming damage; **Steady** provides modest resistance. All enemy attacks have a wind-up. Drifting briefly grants invincibility.
+Attack recovery and travel time create measured base single-target rates 55.8 and 44 damage per second respectively in the 20-second stationary-target regression scenario. Both weapons receive the same Waychime upgrades. **Gentle** uses the former Steady balance without reducing damage or enemy speed. **Steady** starts slightly tougher and grows considerably harder across the journey: more enemies, higher concurrent enemy limits, and increasing health and damage. In the final world, enemies have roughly three times the Gentle health and over twice the damage. All enemy attacks have a wind-up. Drifting briefly grants invincibility.
 
-Echo shrines heal for 8, dropped hearts heal for 10, completed passages heal for 16, and mending herbs heal for 45. A guardian heals for 40, and entering a new world restores health. Every few passages, choose a temporary upgrade to attack damage, maximum health, movement, or attack speed.
+Echo shrines heal for 8, dropped hearts heal for 10, completed passages heal for 16, and mending herbs heal for 45. A guardian heals for 40, and entering a new world restores health. After passages 3 and 6 in every world, find a **Waychime**. These twelve uniquely named runes stay with you after death. Each holds one blessing: +13% weapon damage, +18 maximum health, +5.5% movement speed, or 7% faster attack recovery (capped at 45%). Every bound blessing is active from the start of a fresh journey. Revisit the same clearing to keep its blessing or replace it; each rune contributes exactly once. The on-screen rack shows all twelve, with undiscovered marks greyed out. Open it for the named collection and blessing totals.
 
 ## Your musical collection
 
@@ -36,13 +36,15 @@ There are 36 collection entries, including the starting Lofi palette. Echo beare
 
 Unlocks include bass, melody, atmosphere, and arpeggio tracks; instruments; six keys; minor, major, Dorian, and pentatonic scales; 4/4, 3/4, 6/8, and 5/4; tempo from 60–96 BPM; swing; reverb; tape delay; warmth; and arrangement density. Swing shifts offbeat eighth notes throughout the active arrangement, up to a gentle 2:1 shuffle. Tape delay adds audible, tempo-synced repeats with filtered feedback. Notes share a diatonic harmonic progression. Music is composed locally with seeded motifs, changing phrases, synthesized instruments, and genre-specific rhythms. There is no prerecorded music loop and no timing requirement for combat.
 
-Your collection survives death. A new run starts from the first world with your chosen weapon. Run-only combat upgrades reset. Your current run, musical settings, completed guardians, and collection save automatically in browser localStorage. Save & return to title resumes at the **start of the current passage**, with saved health, herbs, weapon, upgrades, and elapsed run time. This is a device-local save; clearing browser storage removes it.
+Discoveries are added to two places: this journey’s musical palette and your permanent cabin collection. After death, a fresh journey starts with the basic music palette and a new arrangement; your chosen Waychime blessings remain active. The cabin retains every discovered sound and its own saved musical arrangement. Changing the journey mix does not overwrite your studio mix. Master volume, mute, and accessibility preferences apply everywhere. Your current run, its palette and mix, Waychimes, completed guardians, and cabin collection save automatically in browser localStorage. Save & return to the cabin resumes at the **start of the current passage**, with saved health, herbs, weapon, Waychimes, run music, and elapsed run time. Old archives and saved combat upgrades are migrated into the new progression system. This is a device-local save; clearing browser storage removes it.
 
-## The completion studio
+## Your cabin studio
 
-Complete the six guardians and enter the final gateway to open the completion screen. Choose your genre, instruments, active tracks, track levels, key, scale, meter, BPM, effects, and master volume. Request a new arrangement seed for another composition. The studio remains accessible from the title after your first clear.
+The start and end of the journey are the same place: a warm illustrated cabin, with the traveler seated at a table between a pair of speakers and a mixing desk. Hover or keyboard-focus the mixer to open music settings; hover or focus the door to choose a weapon, choose a difficulty, or resume a saved journey. Touch layouts also provide explicit Mixer and Play buttons. The studio is available from the beginning and grows as you discover sounds.
 
-**Create & download** renders a new, exactly 60-second stereo, 44.1 kHz, 16-bit PCM WAV using the same synthesis and composition engine as live music. The arrangement fades in and out and includes its effects. A preview player and reusable download link appear after rendering. Audio is generated on the device; no recording permission, account, or upload is required.
+Complete the six guardians and enter the final gateway to return home with the **complete studio unlocked**. Every genre, instrument, track, key, meter, tempo control, and effect becomes available. Change track levels and arrangement density, or request a new melody for another seeded composition. There is no song download or export screen.
+
+The cabin remembers its own genre, arrangement seed, instruments, and effects independently of the active journey. During a journey, its world sets the genre and regional chord tone; other controls become available as echo bearers are defeated. Desktop gameplay has no echo map, so exploration relies on the world itself. The compact map remains on small touch screens.
 
 ## Controls
 
@@ -72,16 +74,16 @@ Serve `dist/` with a static web server. ES modules require HTTP; opening `index.
 
 Source layout:
 
-- `index.html`, `styles.css`: responsive title, game HUD, dialogs, studio, and touch controls.
+- `index.html`, `styles.css`: interactive cabin, game HUD, Waychime rack, dialogs, mixer, and touch controls.
 - `js/engine.js`: seeded world simulation, encounters, weapons, enemies, guardians, and progression.
-- `js/music.js`: composition, Web Audio synthesis, effects, offline rendering, and PCM encoding.
-- `js/data.js`: worlds, musical palettes, unlocks, weapon data, and deterministic helpers.
+- `js/music.js`: composition, Web Audio synthesis, live effects, and development audio encoding.
+- `js/data.js`: worlds, musical palettes, unlocks, Waychimes, difficulty curves, weapons, and deterministic helpers.
 - `js/save.js`: validated browser archive and run persistence.
 - `js/render.js`, `js/sprites.js`: illustrated-world rendering and original vector characters.
-- `js/app.js`: input, interface, audio integration, and lifecycle.
-- `assets/worlds.webp`: original generated environment atlas.
-- `tests/game.test.mjs`: behavioral checks for progression, persistence, harmony, weapons, damage, and WAV structure.
-- `tests/audio-effects.html`: local-only checks for audible swing, echo output, live delay changes, and a full-effect WAV export; copy to `dist/audio-effects.html` for browser QA.
-- `tests/browser.html`: local-only Web Audio verification and archive fixtures; not included in `dist/`. For local QA, copy it to `dist/qa.html`, serve `dist/`, and open `/qa.html`. Rebuild before publication to remove it.
+- `js/app.js`, `js/ui.js`: input, cabin/run music separation, interface, audio integration, and lifecycle.
+- `assets/worlds.webp`, `assets/cabin.webp`: original generated environments and cabin illustration.
+- `tests/game.test.mjs`: behavioral checks for progression, permanent runes, save migration, separate music palettes, difficulty curves, harmony, and combat.
+- `tests/audio-effects.html`: local-only Web Audio checks for swing, echoes, live delay changes, and unclipped output with all effects active.
+- `tests/browser.html`, `tests/qa-controls.js`: local-only cabin, rune, retuning, death, and victory fixtures. Run `npm run qa`, serve `dist/`, and open `/qa.html`. Controls exercise real game events. Rebuild before publication to remove the fixture pages.
 
 GitHub Actions runs the tests, builds `dist/`, and publishes it to the repository’s existing GitHub Pages site on pushes to `main`. The repository name and public address are unchanged.

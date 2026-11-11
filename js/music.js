@@ -1,4 +1,4 @@
-import {REGIONS,KEYS,METERS,seeded,scaleNote,progression,clamp} from './data.js?v=1.0.2';
+import {REGIONS,KEYS,METERS,seeded,scaleNote,progression,clamp} from './data.js?v=2.0.0';
 export function beatSeconds(s){return 60/clamp(s.bpm,60,96)*(s.meter==='6/8'?.5:1);}
 export function barSeconds(s){return beatSeconds(s)*METERS[s.meter];}
 export function grooveTime(time,s){
@@ -67,6 +67,5 @@ export class MusicEngine{
  mute(m){this.muted=m;this.updateGraph();}
  async suspend(){if(this.ctx?.state==='running')await this.ctx.suspend();}
  async resume(){if(this.ctx){await this.ctx.resume();this.tick();}}
- async renderMinute(s=this.settings,seed=this.seed,onProgress=()=>{}){const Offline=globalThis.OfflineAudioContext||globalThis.webkitOfflineAudioContext;if(!Offline)throw new Error('Song rendering is not supported in this browser.');const rate=44100,ctx=new Offline(2,rate*60,rate),g=createMusicGraph(ctx,s,ctx.destination);let t=.08,bar=0;while(t<58.5){scheduleBar(ctx,g,s,seed,bar,t,58.5);t+=barSeconds(s);bar++;}g.master.gain.setValueAtTime(0,0);g.master.gain.linearRampToValueAtTime(s.volume*.8,.45);g.master.gain.setValueAtTime(s.volume*.8,56.7);g.master.gain.linearRampToValueAtTime(0,59.9);onProgress('Rendering your arrangement…');const result=await ctx.startRendering();onProgress('Preparing your WAV…');await new Promise(r=>setTimeout(r,0));return new Blob([encodeWav([result.getChannelData(0),result.getChannelData(1)],rate)],{type:'audio/wav'});}
  sfx(kind){if(!this.ctx||this.muted||this.ctx.state!=='running')return;const t=this.ctx.currentTime;const notes=kind==='unlock'?[72,76,79,84]:kind==='heal'?[69,76]:kind==='hit'?[48]:kind==='dash'?[62]:[55];notes.forEach((n,i)=>tone(this.ctx,this.graph.input,{note:n,duration:kind==='unlock'?.3:.06,velocity:kind==='hit'?.045:.10,instrument:'bell',layer:'melody'},t+i*.085));}
 }
