@@ -1,6 +1,6 @@
 # Stillwave
 
-**[Play Stillwave](https://jh124.github.io/Don-t-play-This-Game/)**
+**[Play Stillwave](https://jh124.github.io/Stillwave/)**
 
 ![The Stillwave cabin studio](assets/preview.webp)
 
@@ -99,4 +99,4 @@ Source layout:
 - `tests/audio-effects.html`: local-only Web Audio checks for swing, echoes, live delay changes, the two Steady rewards, and unclipped output across all genres with every effect active.
 - `tests/browser.html`, `tests/qa-controls.js`: local-only cabin, rune, retuning, death, and victory fixtures. Run `npm run qa`, serve `dist/`, and open `/qa.html`. Controls exercise real game events. Rebuild before publication to remove the fixture pages.
 
-GitHub Actions runs the tests, builds `dist/`, and publishes it to the repository’s existing GitHub Pages site on pushes to `main`. The repository name and public address are unchanged.
+GitHub Actions runs the tests, builds `dist/`, and publishes the game to GitHub Pages on pushes to `main`.
