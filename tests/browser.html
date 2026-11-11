@@ -12,8 +12,8 @@
 <button id="phone">Landscape phone preview</button><button id="rotatePreview">Rotate preview</button><button id="smallPreview">Small phone preview</button>
 <a href="./audio-effects.html">Audio checks</a><div id="phoneFrame"></div>
 <script type="module">
-import {DEFAULT_MUSIC,BASE_UNLOCKS,UNLOCKS,REGIONS,safeMusic} from './js/data.js?v=2.3.1';
-import {readArchive,writeArchive,clearRun,writeRun} from './js/save.js?v=2.3.1';
+import {DEFAULT_MUSIC,BASE_UNLOCKS,UNLOCKS,REGIONS,safeMusic} from './js/data.js?v=2.4.0';
+import {readArchive,writeArchive,clearRun,writeRun} from './js/save.js?v=2.4.0';
 const all=[...new Set([...BASE_UNLOCKS,...UNLOCKS.map(u=>u.id)])];
 function fixture(type,navigate=true){
  const a=readArchive({getItem:()=>null});clearRun();

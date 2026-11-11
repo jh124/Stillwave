@@ -15,8 +15,22 @@ Art direction: warm, hand-painted storybook RPG interior; detailed woodwork, amb
 
 ## Living cabin
 
-The original `cabin.webp` remains intact. `js/cabin.js` animates it in a 24-second Canvas 2D loop: a small upper-body rocking displacement, foliage displacement restricted to window panes, falling rain restricted to glass, rising steam, flickering hearth flames, and independent candle-lantern flicker with gentle warm reflections. The room, mixer, and window frames stay still. Reduced Motion and browsers without canvas support use the original painting.
+The original `cabin.webp` remains intact. `js/cabin.js` animates it in a 24-second Canvas 2D loop: a small upper-body rocking displacement, separate fern fronds turning gently around their stems inside the window panes, falling rain restricted to glass, rising steam, newly drawn flame shapes behind a fixed stove grille, and candle flames anchored to fixed wicks with gentle warm reflections. The room, mixer, and window frames stay still. Reduced Motion and browsers without canvas support use the original painting.
 
 `cabin-steam-plate.webp` is a 96×96 crop at (944, 512) from a steam-free version of the cabin, prepared with the built-in image generation tool. Only the old vapor area is blended over the original before drawing fresh steam; the rest of the generated image is not used.
 
 Edit prompt: Remove only the small white wisps of steam immediately above the tea mug (approximately x=965–1020, y=530–596 in the 1536×1024 cabin). Reconstruct the existing wooden wall and speaker edge behind it. Preserve the tea mug, speaker, traveler, mixer, furniture, rain, window, colors, lighting, dimensions, camera, and composition. Do not redesign, add text, or move anything.
+
+## Separate foliage and flame layers
+
+The forest, stove, and candle lanterns are no longer deformed. Only the traveler uses the original small motion mesh. The approved rain and steam drawing code remains unchanged.
+
+`cabin-fern.webp` is a 384×256 transparent fern cutout, prepared with the built-in image tool and downscaled without changing its shape. Three restrained instances rotate around fixed stem bases; no window-background pixels are displaced.
+
+Fern prompt: Draw one slender, gracefully arched fern frond with delicate leaflets and a fine stem on a truly transparent background. Use the cabin as a style and color reference: textured hand-painted storybook artwork, muted moonlit teal and blue-green foliage, low contrast, no yellow daylight highlights. Stem base near 12% from the left and 90% from the top; tip toward the upper right. No pot, soil, backdrop, other plants, atlas, text, or shadow rectangle. Follow-up cutout edit: preserve the fern and remove every residual background or haze pixel outside its botanical silhouette, including gaps between leaflets.
+
+`cabin-fire-backgrounds.webp` is a 256×160 atlas of five clean background patches, prepared with the built-in image tool. Original source rectangles (x, y, width, height) and atlas destinations are: hearth (77,603,103,133) → (0,0); desk lantern (431,494,61,62) → (112,0); shelf lantern (793,230,42,47) → (180,0); wall lantern (1297,162,51,58) → (112,72); window lantern (346,370,27,31) → (180,72).
+
+Background edit prompt: Change only the inside of the stove firebox and the illuminated glass interiors of the four candle lanterns. Remove painted flame tongues from the stove while retaining logs and softly glowing embers. Replace white glowing blobs in each lantern with a small candle and dark unlit wick behind dim amber glass. Keep every metal grille bar, frame, log, glass edge, lantern body, and candle holder aligned. Preserve the rest of the 1536×1024 painting, camera, ambient lighting, colors, traveler, window, rain, steam, and composition.
+
+The candle flames are native canvas paths with layered gradients, fixed wicks, and moving tips. The hearth uses a small synthesized fire layer with upward-moving periodic turbulence, soft color and opacity contours, and rising embers. Fixed foreground occlusion layers preserve the stove grille and lantern frames; source flame photographs are never stretched or translated.

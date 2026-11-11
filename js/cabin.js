@@ -17,6 +17,9 @@ const fireLights=[
  {bounds:[1297,162,51,58],opening:[[1300,166],[1344,162],[1347,212],[1302,219]],center:[1320,191],radius:73,sway:.75,seed:5.1},
  {bounds:[346,370,27,31],opening:[[349,374],[370,371],[372,397],[348,400]],center:[359,385],radius:33,sway:.5,seed:6.8}
 ];
+const firePlates=[[0,0],[112,0],[180,0],[112,72],[180,72]];
+const candleWicks=[null,[461,546,22,5],[814,269,18,4],[1320,210,21,4.8],[359,396,11,2.8]];
+const fronds=[{x:151,y:507,width:156,mirror:1,seed:.4},{x:379,y:501,width:150,mirror:-1,seed:2.1},{x:244,y:430,width:124,mirror:1,seed:4.3}];
 const traveler=[[639,452],[696,448],[742,473],[735,527],[724,550],[760,589],[790,613],[819,595],[839,590],[846,605],[830,632],[811,646],[814,676],[784,717],[743,733],[684,749],[635,744],[580,740],[564,697],[565,653],[587,598],[610,583],[608,546],[620,526],[614,495]];
 const panes=[[[179,122],[223,130],[222,211],[167,210]],[[235,131],[322,143],[325,214],[235,212]],[[334,145],[355,152],[368,216],[336,215]],[[163,227],[222,230],[220,324],[146,326]],[[234,230],[325,232],[328,324],[234,324]],[[338,232],[370,234],[380,324],[339,324]],[[145,343],[219,343],[215,524],[127,539]],[[234,343],[328,342],[331,513],[231,526]],[[341,341],[385,343],[391,505],[343,511]]];
 function path(points){const p=new Path2D();points.forEach(([x,y],i)=>p[i?'lineTo':'moveTo'](x,y));p.closePath();return p;}
@@ -29,8 +32,8 @@ function smooth(low,high,value){const t=Math.max(0,Math.min(1,(value-low)/(high-
 function lampFrame(image,light){
  const [x,y,width,height]=light.bounds,canvas=document.createElement('canvas');canvas.width=width;canvas.height=height;
  const ctx=canvas.getContext('2d',{willReadFrequently:true});ctx.drawImage(image,x,y,width,height,0,0,width,height);const pixels=ctx.getImageData(0,0,width,height);
- // Restore dark metal, window bars, and logs over the moving light behind them.
- for(let i=0;i<pixels.data.length;i+=4){const brightness=pixels.data[i]*.3+pixels.data[i+1]*.59+pixels.data[i+2]*.11;pixels.data[i+3]=Math.round((1-smooth(58,160,brightness))*255);}
+ // This fixed foreground occludes new flames; the source photograph is never warped.
+ for(let i=0;i<pixels.data.length;i+=4){const r=pixels.data[i],g=pixels.data[i+1],b=pixels.data[i+2],brightness=r*.3+g*.59+b*.11,hot=r>150&&g>60&&r>g*1.35&&g>b*1.5;pixels.data[i+3]=Math.round((1-smooth(42,130,brightness))*(hot?.15:1)*255);}
  ctx.putImageData(pixels,0,0);return canvas;
 }
 function triangle(ctx,image,source,destination){
@@ -52,6 +55,26 @@ function mesh(ctx,image,rect,columns,rows,displace){
   for(const indices of [[a,b,c],[b,d,c]]){const vertices=indices.map(i=>points[i]);if(vertices.some(v=>v.moving))triangle(ctx,image,vertices.map(v=>v.source),vertices.map(v=>v.destination));}
  }
 }
+function flame(ctx,x,y,width,height,phase,seed,opacity=1){
+ const motion=flameMotion(phase,seed),angle=phase*TAU,h=height*motion.stretch,w=width*(.92+.08*Math.sin(angle*11+seed)),tip=x+motion.sway*width*.43;
+ const outline=(scaleX,scaleY)=>{
+  const half=w*scaleX,top=y-h*scaleY,lean=(tip-x)*scaleY;
+  ctx.beginPath();ctx.moveTo(x-half*.45,y);
+  ctx.bezierCurveTo(x-half*.94,y-h*.22*scaleY,x+lean-half*.38,top+h*.34*scaleY,x+lean,top);
+  ctx.bezierCurveTo(x+lean+half*.16,top+h*.44*scaleY,x+half*.94,y-h*.26*scaleY,x+half*.45,y);
+  ctx.bezierCurveTo(x+half*.23,y+1,x-half*.23,y+1,x-half*.45,y);ctx.closePath();
+ };
+ ctx.save();ctx.globalAlpha=opacity;
+ let gradient=ctx.createLinearGradient(x,y,x,y-h);gradient.addColorStop(0,'rgba(255,111,22,.36)');gradient.addColorStop(.27,'rgba(255,178,47,.76)');gradient.addColorStop(.68,'rgba(255,215,114,.56)');gradient.addColorStop(1,'rgba(255,184,55,.03)');ctx.fillStyle=gradient;outline(1,1);ctx.fill();
+ gradient=ctx.createLinearGradient(x,y,x,y-h*.66);gradient.addColorStop(0,'rgba(255,204,82,.72)');gradient.addColorStop(.43,'rgba(255,245,190,.83)');gradient.addColorStop(1,'rgba(255,230,141,0)');ctx.fillStyle=gradient;outline(.4,.66);ctx.fill();ctx.restore();
+}
+function flameNoise(){
+ const grid=new Float32Array(1024);let seed=48371;for(let i=0;i<grid.length;i++){seed=(Math.imul(seed,1664525)+1013904223)>>>0;grid[i]=seed/4294967296;}return grid;
+}
+function noise(grid,x,y){
+ const ix=Math.floor(x),iy=Math.floor(y),fx=x-ix,fy=y-iy,sx=fx*fx*(3-2*fx),sy=fy*fy*(3-2*fy),a=grid[(iy&31)*32+(ix&31)],b=grid[(iy&31)*32+((ix+1)&31)],c=grid[((iy+1)&31)*32+(ix&31)],d=grid[((iy+1)&31)*32+((ix+1)&31)];
+ return (a+(b-a)*sx)*(1-sy)+(c+(d-c)*sx)*sy;
+}
 export class CabinAnimation{
  constructor(canvas,image){
   this.canvas=canvas;this.image=image;this.ready=false;this.disabled=false;this.reduced=false;this.pending=null;this.last=-Infinity;this.start=null;
@@ -59,10 +82,11 @@ export class CabinAnimation{
  setReducedMotion(reduced){this.reduced=reduced;if(reduced)this.canvas.classList.remove('active');}
  async prepare(){
   try{
-   await this.image.decode();const plate=new Image();plate.src=new URL('../assets/cabin-steam-plate.webp',import.meta.url).href;await plate.decode();
+   await this.image.decode();const plate=new Image(),fireBackgrounds=new Image(),fern=new Image();plate.src=new URL('../assets/cabin-steam-plate.webp',import.meta.url).href;fireBackgrounds.src=new URL('../assets/cabin-fire-backgrounds.webp',import.meta.url).href;fern.src=new URL('../assets/cabin-fern.webp',import.meta.url).href;await Promise.all([plate.decode(),fireBackgrounds.decode(),fern.decode()]);this.fireBackgrounds=fireBackgrounds;this.fern=fern;
    this.ctx=this.canvas.getContext('2d',{alpha:false});if(!this.ctx)throw new Error('Canvas unavailable');
    this.travelerMask=mask();this.glass=new Path2D();for(const pane of panes)this.glass.addPath(path(pane));this.foliage=new Path2D();for(const pane of panes.slice(3))this.foliage.addPath(path(pane));
-   this.fireLights=fireLights.map(light=>({...light,clip:path(light.opening),frame:lampFrame(this.image,light)}));
+   this.fireLights=fireLights.map((light,i)=>({...light,plate:firePlates[i],wick:candleWicks[i],clip:path(light.opening),frame:lampFrame(this.image,light)}));
+   this.fireNoise=flameNoise();this.fireCanvas=document.createElement('canvas');this.fireCanvas.width=64;this.fireCanvas.height=88;this.fireContext=this.fireCanvas.getContext('2d');this.firePixels=this.fireContext.createImageData(64,88);
    // Feather the generated clean plate into only the old steam area.
    this.plate=document.createElement('canvas');this.plate.width=96;this.plate.height=96;const pc=this.plate.getContext('2d');pc.drawImage(plate,0,0);
    pc.globalCompositeOperation='destination-in';const gradient=pc.createRadialGradient(43,43,19,43,43,43);gradient.addColorStop(0,'#fff');gradient.addColorStop(1,'#fff0');pc.fillStyle=gradient;pc.fillRect(0,0,96,77);pc.clearRect(0,77,96,19);
@@ -74,8 +98,10 @@ export class CabinAnimation{
   ctx.drawImage(image,0,0,1536,1024);
   const rock=Math.sin(angle*3);
   mesh(ctx,image,[548,424,320,352],12,13,(x,y)=>{const alpha=this.travelerMask[(Math.round(y)*1536+Math.round(x))*4+3]/255,upper=1-smooth(565,750,y);return [(y-742)*.012*rock*alpha*upper,(666-x)*.004*rock*alpha*upper];});
-  const breeze=Math.sin(angle*2)*2.8+Math.sin(angle*4)*.65;
-  ctx.save();ctx.clip(this.foliage);mesh(ctx,image,[120,220,282,324],7,9,(x,y)=>[breeze*(.55+.45*Math.sin(y*.022)),Math.sin(angle*2)*.65]);ctx.restore();
+  // Only individual transparent fronds turn around their stems. The forest stays fixed.
+  ctx.save();ctx.clip(this.foliage);
+  for(const frond of fronds){const height=frond.width*this.fern.naturalHeight/this.fern.naturalWidth;ctx.save();ctx.translate(frond.x,frond.y);ctx.rotate(.009*Math.sin(angle*2+frond.seed)+.002*Math.sin(angle*4+frond.seed*1.7));ctx.scale(frond.mirror,1);ctx.globalAlpha=.78;ctx.drawImage(this.fern,-frond.width*.13,-height*.9,frond.width,height);ctx.restore();}
+  ctx.restore();
   ctx.drawImage(this.plate,944,512);
   // Drops traverse an integer number of periods per cycle, with the window frame fixed.
   ctx.save();ctx.clip(this.glass);ctx.lineCap='round';
@@ -101,16 +127,34 @@ export class CabinAnimation{
   for(const light of this.fireLights){
    const motion=flameMotion(phase,light.seed),[x,y,width,height]=light.bounds;
    ctx.save();ctx.clip(light.clip);
-   mesh(ctx,this.image,light.bounds,light.hearth?6:2,light.hearth?8:3,(px,py)=>{
-    const rise=1-smooth(y,y+height,py),ripple=.7+.3*Math.sin(py*.16+angle*13+light.seed);
-    return [motion.sway*light.sway*rise*ripple,(1-motion.stretch)*height*.5*rise];
-   });
+   ctx.drawImage(this.fireBackgrounds,light.plate[0],light.plate[1],width,height,x,y,width,height);
+   if(light.hearth){
+    this.paintHearth(phase);
+    for(let i=0;i<5;i++){const age=(phase*7+i*.193)%1,ex=91+i*16+Math.sin(angle*3+i)*2,ey=720-age*86;ctx.fillStyle=`rgba(255,176,64,${Math.sin(age*Math.PI)*.3})`;ctx.beginPath();ctx.arc(ex,ey,.55,0,TAU);ctx.fill();}
+   }else{
+    const [wx,wy,fh,fw]=light.wick;ctx.strokeStyle='#503320';ctx.lineWidth=.8;ctx.beginPath();ctx.moveTo(wx,wy+2);ctx.lineTo(wx,wy-1);ctx.stroke();flame(ctx,wx,wy,fw,fh,phase,light.seed,.98);
+   }
    ctx.drawImage(light.frame,x,y);
-   ctx.globalCompositeOperation='screen';ctx.globalAlpha=.025+motion.glow*.045;ctx.drawImage(this.image,x,y,width,height,x,y,width,height);ctx.restore();
+   ctx.restore();
    // A restrained warm reflection follows each flame's own flicker.
    const [cx,cy]=light.center,radius=light.radius,opacity=(light.hearth?.045:.026)*motion.glow;
    ctx.save();ctx.globalCompositeOperation='screen';const glow=ctx.createRadialGradient(cx,cy,0,cx,cy,radius);glow.addColorStop(0,`rgba(255,167,63,${opacity})`);glow.addColorStop(.45,`rgba(255,145,46,${opacity*.36})`);glow.addColorStop(1,'rgba(255,145,46,0)');ctx.fillStyle=glow;ctx.fillRect(cx-radius,cy-radius,radius*2,radius*2);ctx.restore();
   }
+ }
+ paintHearth(phase){
+  const pixels=this.firePixels.data,grid=this.fireNoise,width=64,height=88,wind=Math.sin(phase*TAU*2)*.18;
+  for(let row=0;row<height;row++){
+   const v=1-row/(height-1);
+   for(let column=0;column<width;column++){
+    const u=column/(width-1),x=u*2-1;
+    const turbulence=noise(grid,u*6+wind,row/height*12+phase*160)*.5+noise(grid,u*13+2,row/height*20+phase*256)*.3+noise(grid,u*27+7,row/height*36+phase*448)*.2;
+    const curl=(noise(grid,u*3+9,row/height*5+phase*64)-.5)*v*.32;
+    const heat=(1-v)*.78+.12-Math.pow(Math.abs(x+curl),1.65)*.7+(turbulence-.5)*.95;
+    const alpha=smooth(.09,.25,heat)*.85*(1-smooth(.91,1,v)),temperature=Math.max(0,Math.min(1,(heat-.07)*1.3)),index=(row*width+column)*4;
+    pixels[index]=255;pixels[index+1]=Math.round(67+183*Math.min(1,temperature*1.35));pixels[index+2]=Math.round(12+198*Math.pow(temperature,2.2));pixels[index+3]=Math.round(alpha*255);
+   }
+  }
+  this.fireContext.putImageData(this.firePixels,0,0);this.ctx.drawImage(this.fireCanvas,82,612,93,118);
  }
  draw(now,{visible=true,positionX=.5}={}){
   if(!visible||this.reduced||this.disabled)return;

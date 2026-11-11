@@ -1,6 +1,6 @@
 <!doctype html><html lang="en"><meta charset="utf-8"><title>Stillwave · effect regression checks</title><style>body{font:15px system-ui;background:#17332f;color:#e6ecd4;max-width:1000px;margin:40px auto;padding:30px}button{background:#c4d7ad;color:#17332f;border:0;padding:14px 20px;border-radius:7px;cursor:pointer}pre{line-height:1.9;white-space:pre-wrap}audio{width:100%}.players{display:grid;grid-template-columns:1fr 1fr;gap:25px}</style><h1>Stillwave · effect regression checks</h1><p>Local development page. Excluded from the published build.</p><button id="runEffects">Test the live music engine</button><pre id="out" aria-live="polite">Ready.</pre><section id="players" class="players"></section><script type="module">
-import {MusicEngine,createMusicGraph,scheduleBar,barSeconds,delayParameters,encodeWav} from './js/music.js?v=2.3.1';
-import {DEFAULT_MUSIC,LAYERS,REGIONS} from './js/data.js?v=2.3.1';
+import {MusicEngine,createMusicGraph,scheduleBar,barSeconds,delayParameters,encodeWav} from './js/music.js?v=2.4.0';
+import {DEFAULT_MUSIC,LAYERS,REGIONS} from './js/data.js?v=2.4.0';
 const $=id=>document.getElementById(id),lines=[];
 function report(ok,msg){lines.push((ok?'PASS ':'FAIL ')+msg);$('out').textContent=lines.join('\n');if(!ok)throw new Error(msg);}
 function energy(data,sr,start,end){let e=0;for(let i=Math.floor(start*sr);i<Math.min(data.length,Math.floor(end*sr));i++)e+=data[i]*data[i];return e;}
