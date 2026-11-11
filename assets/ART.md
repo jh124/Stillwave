@@ -15,7 +15,7 @@ Art direction: warm, hand-painted storybook RPG interior; detailed woodwork, amb
 
 ## Living cabin
 
-The original `cabin.webp` remains intact. `js/cabin.js` animates it in a 24-second Canvas 2D loop: a small upper-body rocking displacement, foliage displacement restricted to window panes, falling rain restricted to glass, and rising steam. The room, mixer, and window frames stay still. Reduced Motion and browsers without canvas support use the original painting.
+The original `cabin.webp` remains intact. `js/cabin.js` animates it in a 24-second Canvas 2D loop: a small upper-body rocking displacement, foliage displacement restricted to window panes, falling rain restricted to glass, rising steam, flickering hearth flames, and independent candle-lantern flicker with gentle warm reflections. The room, mixer, and window frames stay still. Reduced Motion and browsers without canvas support use the original painting.
 
 `cabin-steam-plate.webp` is a 96×96 crop at (944, 512) from a steam-free version of the cabin, prepared with the built-in image generation tool. Only the old vapor area is blended over the original before drawing fresh steam; the rest of the generated image is not used.
 

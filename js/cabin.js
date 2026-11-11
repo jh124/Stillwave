@@ -6,6 +6,17 @@ export function cabinCrop(width,height,imageWidth,imageHeight,positionX=.5){
  return {x:-(width-w)*positionX/w,y:-(height-h)*.5/h,width:width/w,height:height/h};
 }
 const TAU=Math.PI*2;
+export function flameMotion(phase,seed=0){
+ const angle=phase*TAU;
+ return {sway:.6*Math.sin(angle*19+seed)+.25*Math.sin(angle*37+seed*1.7),stretch:1+.07*Math.sin(angle*23+seed*.7)+.035*Math.sin(angle*41+seed*1.3),glow:.85+.08*Math.sin(angle*17+seed)+.045*Math.sin(angle*31+seed*1.9)};
+}
+const fireLights=[
+ {bounds:[77,603,103,133],opening:[[82,644],[90,627],[109,612],[130,608],[151,613],[169,629],[175,651],[177,702],[166,714],[86,734]],center:[125,671],radius:125,sway:2.6,seed:0,hearth:true},
+ {bounds:[431,494,61,62],opening:[[435,501],[486,497],[490,548],[432,554]],center:[461,525],radius:73,sway:.8,seed:1.7},
+ {bounds:[793,230,42,47],opening:[[795,235],[830,231],[833,272],[797,276]],center:[814,255],radius:48,sway:.65,seed:3.4},
+ {bounds:[1297,162,51,58],opening:[[1300,166],[1344,162],[1347,212],[1302,219]],center:[1320,191],radius:73,sway:.75,seed:5.1},
+ {bounds:[346,370,27,31],opening:[[349,374],[370,371],[372,397],[348,400]],center:[359,385],radius:33,sway:.5,seed:6.8}
+];
 const traveler=[[639,452],[696,448],[742,473],[735,527],[724,550],[760,589],[790,613],[819,595],[839,590],[846,605],[830,632],[811,646],[814,676],[784,717],[743,733],[684,749],[635,744],[580,740],[564,697],[565,653],[587,598],[610,583],[608,546],[620,526],[614,495]];
 const panes=[[[179,122],[223,130],[222,211],[167,210]],[[235,131],[322,143],[325,214],[235,212]],[[334,145],[355,152],[368,216],[336,215]],[[163,227],[222,230],[220,324],[146,326]],[[234,230],[325,232],[328,324],[234,324]],[[338,232],[370,234],[380,324],[339,324]],[[145,343],[219,343],[215,524],[127,539]],[[234,343],[328,342],[331,513],[231,526]],[[341,341],[385,343],[391,505],[343,511]]];
 function path(points){const p=new Path2D();points.forEach(([x,y],i)=>p[i?'lineTo':'moveTo'](x,y));p.closePath();return p;}
@@ -15,6 +26,13 @@ function mask(){
  return ctx.getImageData(0,0,1536,1024).data;
 }
 function smooth(low,high,value){const t=Math.max(0,Math.min(1,(value-low)/(high-low)));return t*t*(3-2*t);}
+function lampFrame(image,light){
+ const [x,y,width,height]=light.bounds,canvas=document.createElement('canvas');canvas.width=width;canvas.height=height;
+ const ctx=canvas.getContext('2d',{willReadFrequently:true});ctx.drawImage(image,x,y,width,height,0,0,width,height);const pixels=ctx.getImageData(0,0,width,height);
+ // Restore dark metal, window bars, and logs over the moving light behind them.
+ for(let i=0;i<pixels.data.length;i+=4){const brightness=pixels.data[i]*.3+pixels.data[i+1]*.59+pixels.data[i+2]*.11;pixels.data[i+3]=Math.round((1-smooth(58,160,brightness))*255);}
+ ctx.putImageData(pixels,0,0);return canvas;
+}
 function triangle(ctx,image,source,destination){
  const [s0,s1,s2]=source,[d0,d1,d2]=destination;
  const sx1=s1.x-s0.x,sy1=s1.y-s0.y,sx2=s2.x-s0.x,sy2=s2.y-s0.y,det=sx1*sy2-sx2*sy1;
@@ -44,6 +62,7 @@ export class CabinAnimation{
    await this.image.decode();const plate=new Image();plate.src=new URL('../assets/cabin-steam-plate.webp',import.meta.url).href;await plate.decode();
    this.ctx=this.canvas.getContext('2d',{alpha:false});if(!this.ctx)throw new Error('Canvas unavailable');
    this.travelerMask=mask();this.glass=new Path2D();for(const pane of panes)this.glass.addPath(path(pane));this.foliage=new Path2D();for(const pane of panes.slice(3))this.foliage.addPath(path(pane));
+   this.fireLights=fireLights.map(light=>({...light,clip:path(light.opening),frame:lampFrame(this.image,light)}));
    // Feather the generated clean plate into only the old steam area.
    this.plate=document.createElement('canvas');this.plate.width=96;this.plate.height=96;const pc=this.plate.getContext('2d');pc.drawImage(plate,0,0);
    pc.globalCompositeOperation='destination-in';const gradient=pc.createRadialGradient(43,43,19,43,43,43);gradient.addColorStop(0,'#fff');gradient.addColorStop(1,'#fff0');pc.fillStyle=gradient;pc.fillRect(0,0,96,77);pc.clearRect(0,77,96,19);
@@ -74,6 +93,23 @@ export class CabinAnimation{
   for(let i=0;i<12;i++){
    const age=(phase*4+i/12)%1,drift=Math.sin(age*TAU*1.2+angle*4+i*.32)*(2+age*7),x=985+drift,y=590-age*88,radius=5+age*5,opacity=Math.sin(age*Math.PI)**1.5*.13;
    ctx.save();ctx.translate(x,y);ctx.scale((2.4+age*3.8)/radius,1);const g=ctx.createRadialGradient(0,0,0,0,0,radius);g.addColorStop(0,`rgba(234,235,218,${opacity})`);g.addColorStop(1,'rgba(234,235,218,0)');ctx.fillStyle=g;ctx.fillRect(-radius,-radius,radius*2,radius*2);ctx.restore();
+  }
+  this.paintFire(phase);
+ }
+ paintFire(phase){
+  const ctx=this.ctx,angle=phase*TAU;
+  for(const light of this.fireLights){
+   const motion=flameMotion(phase,light.seed),[x,y,width,height]=light.bounds;
+   ctx.save();ctx.clip(light.clip);
+   mesh(ctx,this.image,light.bounds,light.hearth?6:2,light.hearth?8:3,(px,py)=>{
+    const rise=1-smooth(y,y+height,py),ripple=.7+.3*Math.sin(py*.16+angle*13+light.seed);
+    return [motion.sway*light.sway*rise*ripple,(1-motion.stretch)*height*.5*rise];
+   });
+   ctx.drawImage(light.frame,x,y);
+   ctx.globalCompositeOperation='screen';ctx.globalAlpha=.025+motion.glow*.045;ctx.drawImage(this.image,x,y,width,height,x,y,width,height);ctx.restore();
+   // A restrained warm reflection follows each flame's own flicker.
+   const [cx,cy]=light.center,radius=light.radius,opacity=(light.hearth?.045:.026)*motion.glow;
+   ctx.save();ctx.globalCompositeOperation='screen';const glow=ctx.createRadialGradient(cx,cy,0,cx,cy,radius);glow.addColorStop(0,`rgba(255,167,63,${opacity})`);glow.addColorStop(.45,`rgba(255,145,46,${opacity*.36})`);glow.addColorStop(1,'rgba(255,145,46,0)');ctx.fillStyle=glow;ctx.fillRect(cx-radius,cy-radius,radius*2,radius*2);ctx.restore();
   }
  }
  draw(now,{visible=true,positionX=.5}={}){

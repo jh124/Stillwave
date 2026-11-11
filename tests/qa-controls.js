@@ -1,5 +1,5 @@
 // Development-only controls, excluded from the production build.
-import {Journey} from './js/engine.js?v=2.3.0';
+import {Journey} from './js/engine.js?v=2.3.1';
 let active;
 const enter=Journey.prototype.enterRoom;
 Journey.prototype.enterRoom=function(...args){active=this;return enter.apply(this,args);};

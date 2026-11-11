@@ -1,4 +1,4 @@
-export const VERSION = '2.3.0';
+export const VERSION = '2.3.1';
 export const PASSAGES = 8;
 export const PASSAGE_SECONDS = 75;
 export const WORLD = {w:1600,h:1100};

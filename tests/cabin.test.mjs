@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {cabinCrop,cabinPhase,CABIN_LOOP_SECONDS} from '../js/cabin.js';
+import {cabinCrop,cabinPhase,flameMotion,CABIN_LOOP_SECONDS} from '../js/cabin.js';
 
 test('the cabin loop has identical phases at its seam and at later complete cycles',()=>{
  for(const time of [0,125,3000,12345,23999])assert.ok(Math.abs(cabinPhase(time)-cabinPhase(time+CABIN_LOOP_SECONDS*1000))<1e-12);
@@ -15,4 +15,12 @@ test('animated cabin coordinates match the still image and interaction areas at 
    assert.ok(Math.abs((y-crop.y)/crop.height*height-(offsetY+y*imageHeight))<1e-9);
   }
  }
+});
+test('fire and candle motion remains restrained and continuous across the cabin loop',()=>{
+ for(const seed of [0,1.7,3.4,5.1,6.8])for(let step=0;step<=120;step++){
+  const phase=step/120,a=flameMotion(phase,seed),b=flameMotion(phase+1,seed);
+  for(const key of ['sway','stretch','glow']){assert.ok(Number.isFinite(a[key]));assert.ok(Math.abs(a[key]-b[key])<1e-12);}
+  assert.ok(Math.abs(a.sway)<=.851);assert.ok(a.stretch>=.894&&a.stretch<=1.106);assert.ok(a.glow>=.724&&a.glow<=.976);
+ }
+ assert.notDeepEqual(flameMotion(.25,0),flameMotion(.25,1.7));
 });
