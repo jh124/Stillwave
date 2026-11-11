@@ -1,4 +1,4 @@
-import {WORLD,REGIONS,WEAPONS,PASSAGES,PASSAGE_SECONDS,seeded,newSeed,clamp,difficultyTuning,cleanRunes,runeAt,BASE_UNLOCKS,DEFAULT_MUSIC,normalizeUnlocks,fieldMusic} from './data.js?v=2.4.0';
+import {WORLD,REGIONS,WEAPONS,PASSAGES,PASSAGE_SECONDS,seeded,newSeed,clamp,difficultyTuning,cleanRunes,runeAt,BASE_UNLOCKS,DEFAULT_MUSIC,normalizeUnlocks,fieldMusic} from './data.js?v=2.5.0';
 const distance=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
 export function placeEchoShrines(rng,spawn){
  const shrines=[],exit={x:WORLD.w*.5,y:170};

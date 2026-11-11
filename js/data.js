@@ -1,4 +1,4 @@
-export const VERSION = '2.4.0';
+export const VERSION = '2.5.0';
 export const PASSAGES = 8;
 export const PASSAGE_SECONDS = 75;
 export const WORLD = {w:1600,h:1100};
@@ -69,6 +69,26 @@ export function safeMusic(input={},unlocks=BASE_UNLOCKS,free=false,steadyCleared
  for(const k of LAYERS){s.layers[k]=allowed('track:'+k)&&input.layers?.[k]!==false;s.levels[k]=clamp(Number(input.levels?.[k]??s.levels[k]),0,1);}
  for(const k of ['chords','bass','melody','pad','arp']){const inst=input.instruments?.[k];if(INSTRUMENTS[inst]&&allowed('instrument:'+inst))s.instruments[k]=inst;}
  return s;
+}
+export function randomizeMusic(input={},unlocks=BASE_UNLOCKS,free=false,steadyCleared=false,rng=Math.random){
+ const sound=safeMusic(input,unlocks,free,steadyCleared),owned=new Set(unlocks),allowed=id=>free||owned.has(id);
+ const pick=values=>values[Math.floor(rng()*values.length)];
+ const amount=(min,max)=>Math.round((min+rng()*(max-min))*100)/100;
+ sound.genre=pick(REGIONS.map((region,index)=>({region,index})).filter(({region})=>allowed('genre:'+region.id))).index;
+ sound.key=pick(Object.keys(KEYS).filter(key=>allowed('key:'+key)));
+ sound.scale=pick(Object.keys(SCALES).filter(scale=>scale==='minor'||allowed('scale:'+scale)));
+ sound.meter=pick(Object.keys(METERS).filter(meter=>meter==='4/4'||allowed('meter:'+meter)));
+ sound.bpm=allowed('effect:tempo')?60+Math.floor(rng()*37):REGIONS[sound.genre].bpm;
+ for(const [effect,min,max] of [['swing',0,.28],['density',.2,1],['reverb',0,1],['delay',0,.45],['warmth',0,1]])if(allowed('effect:'+effect))sound[effect]=amount(min,max);
+ for(const effect of ['bloom','chorus'])if(steadyCleared===true)sound[effect]=amount(0,1);
+ const instruments=Object.keys(INSTRUMENTS).filter(instrument=>allowed('instrument:'+instrument));
+ for(const layer of LAYERS){
+  sound.layers[layer]=allowed('track:'+layer)&&rng()<.65;
+  if(layer!=='drums'&&allowed('track:'+layer))sound.instruments[layer]=pick(instruments);
+ }
+ // Every roll has a musical voice, even when the random track switches are all off.
+ if(!LAYERS.some(layer=>layer!=='drums'&&sound.layers[layer]))sound.layers[pick(LAYERS.filter(layer=>layer!=='drums'&&allowed('track:'+layer)))]=true;
+ return sound;
 }
 export function progression(scale,bar,seed=0){const minor=scale==='minor'||scale==='pentatonic',choices=minor?[[0,5,2,6,0,3,5,4],[0,3,5,4,0,2,6,5],[0,2,5,6,0,5,3,4]]:[[0,4,5,3,0,5,1,4],[0,5,3,4,0,1,3,4],[0,3,4,5,0,5,1,4]];return choices[(seed>>>0)%choices.length][Math.floor(bar/2)%8];}
 export function scaleNote(root,scale,degree){const notes=SCALES[scale]||SCALES.minor;return root+12*Math.floor(degree/notes.length)+notes[((degree%notes.length)+notes.length)%notes.length];}

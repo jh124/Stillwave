@@ -3,7 +3,7 @@
 <h1>Cabin animation checks</h1><p>Development page, excluded from publication.</p><button id="verify">Verify loop and motion regions</button><button id="play">Play / pause</button><button id="reduce">Toggle reduced motion</button><a href="./qa.html">Journey fixtures</a><pre id="result">Ready.</pre><div class="scene"><img id="art" src="./assets/cabin.webp"><canvas id="animation"></canvas></div>
 <section class="details"><div><h2>Hearth and fixed grille</h2><canvas id="hearthZoom" width="260" height="340"></canvas></div><div><h2>Candle and fixed frame</h2><canvas id="candleZoom" width="240" height="360"></canvas></div><div><h2>Separate foliage</h2><canvas id="foliageZoom" width="300" height="340"></canvas></div></section>
 <script type="module">
-import {CabinAnimation} from './js/cabin.js?v=2.4.0';
+import {CabinAnimation} from './js/cabin.js?v=2.5.0';
 const canvas=document.querySelector('#animation'),image=document.querySelector('img'),animation=new CabinAnimation(canvas,image),out=document.querySelector('pre');let playing=true,reduced=false;
 const zooms=[['hearthZoom',[65,590,130,170]],['candleZoom',[426,475,72,108]],['foliageZoom',[120,225,282,320]]].map(([id,rect])=>({canvas:document.getElementById(id),rect}));
 document.querySelector('#play').onclick=()=>playing=!playing;
