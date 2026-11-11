@@ -1,11 +1,11 @@
-import {REGIONS,WEAPONS,UNLOCKS,BASE_UNLOCKS,LAYERS,INSTRUMENTS,KEYS,SCALES,METERS,DEFAULT_MUSIC,PASSAGES,PASSAGE_SECONDS,WAYCHIMES,BLESSINGS,clamp,newSeed,safeMusic,randomizeMusic} from './data.js?v=2.5.0';
-import {readArchive,writeArchive,grantUnlock,grantNext,readRun,writeRun,clearRun,mergeRunRunes,completeJourney} from './save.js?v=2.5.0';
-import {MusicEngine} from './music.js?v=2.5.0';
-import {Journey} from './engine.js?v=2.5.0';
-import {Renderer} from './render.js?v=2.5.0';
-import {CabinAnimation} from './cabin.js?v=2.5.0';
-import {MobileLayout} from './mobile.js?v=2.5.0';
-import {esc,formatTime,closeMarkup,header,weaponArt,runeGlyph,decorateIcons} from './ui.js?v=2.5.0';
+import {REGIONS,WEAPONS,UNLOCKS,BASE_UNLOCKS,LAYERS,INSTRUMENTS,KEYS,SCALES,METERS,DEFAULT_MUSIC,PASSAGES,PASSAGE_SECONDS,WAYCHIMES,BLESSINGS,clamp,newSeed,safeMusic,randomizeMusic} from './data.js?v=2.5.1';
+import {readArchive,writeArchive,grantUnlock,grantNext,readRun,writeRun,clearRun,mergeRunRunes,completeJourney} from './save.js?v=2.5.1';
+import {MusicEngine} from './music.js?v=2.5.1';
+import {Journey} from './engine.js?v=2.5.1';
+import {Renderer} from './render.js?v=2.5.1';
+import {CabinAnimation} from './cabin.js?v=2.5.1';
+import {MobileLayout} from './mobile.js?v=2.5.1';
+import {esc,formatTime,closeMarkup,header,weaponArt,runeGlyph,decorateIcons} from './ui.js?v=2.5.1';
 const $=id=>document.getElementById(id);
 let archive=readArchive(),savedRun=readRun();mergeRunRunes(archive,savedRun);
 let studioMusic=safeMusic(archive.music,archive.unlocks,archive.cleared,archive.steadyCleared),music=studioMusic,scene='studio',game=null,paused=false,modalMode='',musicReturn='studio',collectionReturn='studio',selectedWeapon='sword',accountedSeconds=0,checkpointAt=0,last=performance.now(),hudAt=0,muted=archive.muted;
@@ -149,8 +149,9 @@ function showMusic(from=scene){
  $('previewMusic').onclick=()=>{muted=false;archive.muted=false;startAudio({repair:true});persist();};
  $('newArrangement').onclick=()=>{const seed=newSeed();audio.reseed(seed);if(inField)game.musicSeed=seed;else archive.studioSeed=seed;$('arrangementSeed').textContent='Arrangement '+seed.toString(36).toUpperCase();saveMix();};
  if(!inField)$('randomizeMusic').onclick=()=>{
+  const scrollTop=modal.scrollTop;
   studioMusic=music=randomizeMusic(music,archive.unlocks,archive.cleared,archive.steadyCleared);
-  archive.studioSeed=newSeed();changed();audio.reseed(archive.studioSeed);showMusic(musicReturn);$('randomizeMusic').focus({preventScroll:true});
+  archive.studioSeed=newSeed();changed();audio.reseed(archive.studioSeed);showMusic(musicReturn);modal.scrollTop=scrollTop;$('randomizeMusic').focus({preventScroll:true});
  };
  bindClose(dismissMusic);$('studioDone').onclick=dismissMusic;bindPanelTabs('mixer');refreshAudioUI();
 }
